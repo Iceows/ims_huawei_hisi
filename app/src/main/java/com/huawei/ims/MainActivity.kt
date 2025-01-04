@@ -1,6 +1,6 @@
 /*
  * This file is part of HwIms
- * Copyright (C) 2019 Penn Mackintosh
+ * Copyright (C) 2019,2022 Penn Mackintosh and Raphael Mounier
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
@@ -17,13 +17,12 @@
 
 package com.huawei.ims
 
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.view.View
-import android.widget.Switch
+import android.widget.CheckBox
 
 class MainActivity : Activity() {
     private var prefs: SharedPreferences? = null
@@ -33,16 +32,56 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        prefs = createDeviceProtectedStorageContext().getSharedPreferences("config", Context.MODE_PRIVATE)
+
+        Log.i("MainActivity", "onCreate")
+
+        // ApplicationID : "com.huawei.ims"
+        prefs = getSharedPreferences("com.huawei.ims", MODE_PRIVATE)
+
         ims0state = prefs!!.getBoolean("ims0", true)
         ims1state = prefs!!.getBoolean("ims1", false)
-        (findViewById<View>(R.id.ims0) as Switch).isChecked = ims0state
-        (findViewById<View>(R.id.ims1) as Switch).isChecked = ims1state
-        if (!HwImsService.supportsDualIms(this)) {
-            (findViewById<View>(R.id.ims1) as Switch).isChecked = false
-            findViewById<View>(R.id.ims1).isEnabled = false
-        } else {
-            findViewById<View>(R.id.ims1).isEnabled = true
+
+        Log.i("MainActivity", "ims0 read pref is : " + ims0state)
+        Log.i("MainActivity", "ims1 read pref is : " + ims1state)
+
+        findViewById<CheckBox>(R.id.chkBoxIMS0).isChecked = ims0state
+        findViewById<CheckBox>(R.id.chkBoxIMS1).isChecked = ims1state
+
+        if (!HwImsService.supportsDualIms(this))
+            findViewById<View>(R.id.chkBoxIMS1).isEnabled = false
+        else
+            findViewById<View>(R.id.chkBoxIMS1).isEnabled = true
+    }
+
+
+    fun enableIMS0(view: View) {
+        Log.i("MainActivity", "enableIMS0 ")
+        var newstate = (view as CheckBox).isChecked
+        if (view.isEnabled && newstate != ims0state) {
+            if (ims0state) {
+                // Uncheck
+                HwImsService.instance?.disableIms(0)
+            } else {
+                // Check
+            }
+            ims0state = newstate
+            Log.d("MainActivity", "enableIMS0 new state is : " + ims0state)
+            prefs!!.edit().putBoolean("ims0", ims0state).commit()
+        }
+    }
+
+    fun enableIMS1(view: View) {
+        Log.i("MainActivity", "enableIMS1 ")
+        var newstate = (view as CheckBox).isChecked
+        if (view.isEnabled && newstate != ims1state) {
+            if (ims1state) {
+                // Uncheck
+                HwImsService.instance?.disableIms(1)
+            } else {
+                // Check
+            }
+            ims1state = newstate
+            prefs!!.edit().putBoolean("ims1", ims1state).commit()
         }
     }
 
@@ -59,44 +98,6 @@ class MainActivity : Activity() {
             RilHolder.getRadio(1)!!.restartRILD(RilHolder.getNextSerial())
         } catch (ignored: NullPointerException) {
         }
-
     }
 
-    fun restartRILD2(view: View) {
-        try {
-            RilHolder.getRadio(2)!!.restartRILD(RilHolder.getNextSerial())
-        } catch (ignored: NullPointerException) {
-        }
-
-    }
-
-    @SuppressLint("ApplySharedPref")
-    @Synchronized
-    fun ims0(view: View) {
-        if (view.isEnabled && (view as Switch).isChecked != ims0state) {
-            if (ims0state) {
-                // Uncheck
-                HwImsService.instance?.disableIms(0)
-            } else {
-                // Check
-            }
-            ims0state = view.isChecked
-            prefs!!.edit().putBoolean("ims0", ims0state).commit()
-        }
-    }
-
-    @SuppressLint("ApplySharedPref")
-    @Synchronized
-    fun ims1(view: View) {
-        if (view.isEnabled && (view as Switch).isChecked != ims1state) {
-            if (ims1state) {
-                // Uncheck
-                HwImsService.instance?.disableIms(1)
-            } else {
-                // Check
-            }
-            ims1state = view.isChecked
-            prefs!!.edit().putBoolean("ims1", ims1state).commit()
-        }
-    }
 }
