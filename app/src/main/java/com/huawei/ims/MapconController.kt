@@ -72,13 +72,14 @@ class MapconController : ServiceConnection {
     }
 
     fun init(context: Context) {
+        Log.i(tag, "Requesting bind for Mapcon.")
         val i = Intent()
-        i.setClassName("com.hisi.mapcon", "com.hisi.mapcon.MapconService")
+        i.setClassName("com.huawei.ims", "com.huawei.ims.MapconService")
         // Mapcon doesn't work, and it seems to be more trouble than it's worth.
         // I'm leaving this here in case I ever try again.
         //context.startService(i)
         //context.bindService(i, this, Context.BIND_IMPORTANT or Context.BIND_ABOVE_CLIENT)
-        Log.i(tag, "Requesting bind for Mapcon.")
+        Log.i(tag, "Requesting bind for Mapcon Ok.")
     }
 
     companion object {
