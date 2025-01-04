@@ -1,5 +1,5 @@
 
-xcopy /Y "C:\GitRepo\iceows\ims_hi6250_volte\app\build\outputs\apk\release\app-release.apk" .
+xcopy /Y "C:\GitHub\iceows\ims_huawei_hisi\app\build\outputs\apk\release\app-release.apk" .
 java.exe -jar "ApkSigner.jar" sign  --key platform.pk8 --cert platform.x509.pem  --v4-signing-enabled false --out "HuaweiIMS.apk" "app-release.apk"
 
 xcopy /Y "C:\GitRepo\iceows\treble_app\app\build\outputs\apk\release\app-release-unsigned.apk" .
