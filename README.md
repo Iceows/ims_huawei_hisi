@@ -26,14 +26,15 @@ Ouvrir une session shell (adb shell), puis executer les ligens suivantes :
 
 (facultatif) : Installer l'overlay qui permet de declarer au system l'ims volte, overlay qui porte le nom suivant : "treble-overlay-hw-ims.apk"
 
-        adb shell mkdir /system/app/treble-overlay-telephony-hw-ims
-        adb push treble-overlay-telephony-hw-ims.apk /system/app/treble-overlay-telephony-hw-ims/treble-overlay-telephony-hw-ims.apk
-        adb shell chmod 644 /system/app/treble-overlay-telephony-hw-ims/treble-overlay-telephony-hw-ims.apk
-	adb shell restorecon /system/overlay/treble-overlay-hw-ims.apk
+     adb shell mkdir /system/app/treble-overlay-telephony-hw-ims
+     adb push treble-overlay-telephony-hw-ims.apk /system/app/treble-overlay-telephony-hw-ims/treble-overlay-telephony-hw-ims.apk
+     adb shell chmod 644 /system/app/treble-overlay-telephony-hw-ims/treble-overlay-telephony-hw-ims.apkpk
+     adb shell restorecon /system/overlay/treble-overlay-hw-ims.apk
 
 
 (facultatif) : Installer l'application trebleapps qui permet de paramétrer l'IMS (creation de l'IMS/affiche les propriétés appel 4G etc...)
-       adb push TrebleApp.apk /system/priv-app/TrebleApp
-       adb shell chmod 644 /system/priv-app/TrebleApp/TrebleApp.apk 
+
+     adb push TrebleApp.apk /system/priv-app/TrebleApp
+     adb shell chmod 644 /system/priv-app/TrebleApp/TrebleApp.apk 
 
 Vous devez ensuite demarrer le telephone et créer une APN de type ims avec les meme mcc et 
