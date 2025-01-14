@@ -1,7 +1,7 @@
 # ims_huawei_hisi
  IMS for VOLTE (Huawei hisi device)
 
-Voici un IMS qui permet d'utiliser la voip sur une porteuse LTE (4G) pour les telephones Huawei kirin sous EMUI9 et sous android9 (ANE-LX1,FIG-LX1 etc..)
+Voici un IMS qui permet d'utiliser la voip sur une porteuse LTE (4G) pour les telephones Huawei kirin sous EMUI9 et avec un systeme phh treble sous android9 (ANE-LX1,FIG-LX1 etc..)
 
 Pour l'installer il faut installer l'overlay suivant, puis lui donner les droits
 
