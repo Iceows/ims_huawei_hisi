@@ -1,15 +1,17 @@
 
-xcopy /Y "C:\GitHub\iceows\ims_huawei_hisi\app\build\outputs\apk\release\app-release.apk" .
+xcopy /Y "C:\GitHub\iceows\ims_huawei_hisi\app\build\outputs\apk\release\app-release.apk" 
+
 java.exe -jar "ApkSigner.jar" sign  --key platform.pk8 --cert platform.x509.pem  --v4-signing-enabled false --out "HuaweiIMS.apk" "app-release.apk"
 
-xcopy /Y "C:\GitRepo\iceows\treble_app\app\build\outputs\apk\release\app-release-unsigned.apk" .
-java.exe -jar "ApkSigner.jar" sign  --key platform.pk8 --cert platform.x509.pem  --v4-signing-enabled false --out "TrebleApp.apk" "app-release-unsigned.apk"
 
 adb root
-adb remount rw, /system
+adb remount /system
 adb shell mkdir /system/app/HuaweiIMS
 adb push HuaweiIMS.apk /system/app/HuaweiIMS
-adb shell chmod 644 /system/app/HuaweiIMS/HuaweiIMS.apk 
+adb shell chmod 644 /system/app/HuaweiIMS/HuaweiIMS.apk
+
+REM Iceows enable volte
+REM adb shell "echo ro.hw.volte.enable=1 >>  /system/build.prop"
 
 REM adb push TrebleApp.apk /system/priv-app/TrebleApp
 REM adb shell chmod 644 /system/priv-app/TrebleApp/TrebleApp.apk 
