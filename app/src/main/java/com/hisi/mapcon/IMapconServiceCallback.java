@@ -1,3 +1,19 @@
+/*
+ * This file is part of HwIms
+ * Copyright (C) 2024,2025 Raphael Mounier
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package com.hisi.mapcon;
 
 import android.os.Binder;
@@ -6,11 +22,9 @@ import android.os.IInterface;
 import android.os.Parcel;
 import android.os.RemoteException;
 
-/* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
 public interface IMapconServiceCallback extends IInterface {
     void onVoWifiCloseDone() throws RemoteException;
 
-    /* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
     public static abstract class Stub extends Binder implements IMapconServiceCallback {
         private static final String DESCRIPTOR = "com.hisi.mapcon.IMapconServiceCallback";
         static final int TRANSACTION_onVoWifiCloseDone = 1;
@@ -49,8 +63,6 @@ public interface IMapconServiceCallback extends IInterface {
             return super.onTransact(code, data, reply, flags);
         }
 
-        /* JADX INFO: Access modifiers changed from: private */
-        /* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
         public static class Proxy implements IMapconServiceCallback {
             private IBinder mRemote;
 

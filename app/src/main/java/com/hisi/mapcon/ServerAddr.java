@@ -1,19 +1,33 @@
+/*
+ * This file is part of HwIms
+ * Copyright (C) 2024,2025 Raphael Mounier
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package com.hisi.mapcon;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import java.util.ArrayList;
 
-/* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
 public class ServerAddr implements Parcelable {
     public static final Parcelable.Creator<ServerAddr> CREATOR = new Parcelable.Creator<ServerAddr>() { // from class: com.hisi.mapcon.ServerAddr.1
-        /* JADX WARN: Can't rename method to resolve collision */
+
         @Override // android.os.Parcelable.Creator
         public ServerAddr createFromParcel(Parcel in) {
             return new ServerAddr(in);
         }
 
-        /* JADX WARN: Can't rename method to resolve collision */
         @Override // android.os.Parcelable.Creator
         public ServerAddr[] newArray(int size) {
             return new ServerAddr[size];
@@ -22,7 +36,6 @@ public class ServerAddr implements Parcelable {
     ArrayList<ServerAddrPair> mAddress;
     int mSize;
 
-    /* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
     public static class ServerAddrPair {
         String address;
         int type;

@@ -1,5 +1,20 @@
 package com.hisi.mapcon;
-
+/*
+ * This file is part of HwIms
+ * Copyright (C) 2024,2025 Raphael Mounier
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.IInterface;
@@ -7,7 +22,7 @@ import android.os.Parcel;
 import android.os.RemoteException;
 import com.hisi.mapcon.IMapconServiceCallback;
 
-/* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
+
 public interface IMapconService extends IInterface {
     String getUtOverWifiApn() throws RemoteException;
 
@@ -41,8 +56,7 @@ public interface IMapconService extends IInterface {
 
     int teardownTunnelOverWifi(int i, int i2, String str, ServerAddr serverAddr) throws RemoteException;
 
-    /* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
-    public static abstract class Stub extends Binder implements IMapconService {
+     public static abstract class Stub extends Binder implements IMapconService {
         private static final String DESCRIPTOR = "com.hisi.mapcon.IMapconService";
         static final int TRANSACTION_getUtOverWifiApn = 15;
         static final int TRANSACTION_getVoWifiServiceDomain = 12;
@@ -216,7 +230,6 @@ public interface IMapconService extends IInterface {
             }
         }
 
-        /* loaded from: C:\Users\MOUNIERR\AppData\Local\Temp\jadx-13900076406109865746.dex */
         private static class Proxy implements IMapconService {
             private IBinder mRemote;
 
