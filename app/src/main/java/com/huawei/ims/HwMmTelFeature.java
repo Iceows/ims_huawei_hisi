@@ -1,6 +1,6 @@
 /*
  * This file is part of HwIms
- * Copyright (C) 2019,2022 Penn Mackintosh and Raphael Mounier
+ * Copyright (C) 2019,2025 Penn Mackintosh and Raphael Mounier
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
@@ -19,6 +19,7 @@ package com.huawei.ims;
 
 import android.os.RemoteException;
 import android.annotation.NonNull;
+
 import android.telephony.Rlog;
 import android.telephony.TelephonyManager;
 import android.telephony.ims.ImsCallProfile;
@@ -55,8 +56,9 @@ public class HwMmTelFeature extends MmTelFeature {
                 new MmTelCapabilities(MmTelCapabilities.CAPABILITY_TYPE_VOICE));
         // TODO: check if Mapcon is installed.
         // TODO : test VoWIFI
-        mEnabledCapabilities.append(ImsRegistrationImplBase.REGISTRATION_TECH_IWLAN,
-                new MmTelCapabilities(MmTelCapabilities.CAPABILITY_TYPE_VOICE));
+        // TODO : Iceows : remove voWifi support - need mapcon
+        //mEnabledCapabilities.append(ImsRegistrationImplBase.REGISTRATION_TECH_IWLAN,
+        //        new MmTelCapabilities(MmTelCapabilities.CAPABILITY_TYPE_VOICE));
 
         setFeatureState(STATE_READY);
     }
@@ -77,19 +79,22 @@ public class HwMmTelFeature extends MmTelFeature {
     @Override
     public void changeEnabledCapabilities(CapabilityChangeRequest request,
                                           CapabilityCallbackProxy c) {
+
+        Log.d(LOG_TAG, "changeEnabledCapabilities enable");
         for (CapabilityChangeRequest.CapabilityPair pair : request.getCapabilitiesToEnable()) {
+            Log.d(LOG_TAG,"Enable for RadioTech (LTE/0-IWAN/1) : " + pair.getRadioTech());
             mEnabledCapabilities.get(pair.getRadioTech()).addCapabilities(pair.getCapability());
             if (pair.getRadioTech() == ImsRegistrationImplBase.REGISTRATION_TECH_IWLAN && pair.getCapability() == MmTelCapabilities.CAPABILITY_TYPE_VOICE)
                 MapconController.Companion.getInstance().turnVowifiOn(mSlotId);
         }
+        Log.d(LOG_TAG, "changeEnabledCapabilities disable");
         for (CapabilityChangeRequest.CapabilityPair pair : request.getCapabilitiesToDisable()) {
+            Log.d(LOG_TAG,"Disable for RadioTech (LTE/0-IWAN/1) : " + pair.getRadioTech());
             mEnabledCapabilities.get(pair.getRadioTech()).removeCapabilities(pair.getCapability());
             if (pair.getRadioTech() == ImsRegistrationImplBase.REGISTRATION_TECH_IWLAN && pair.getCapability() == MmTelCapabilities.CAPABILITY_TYPE_VOICE)
                 MapconController.Companion.getInstance().turnVowifiOff(mSlotId);
         }
     }
-
-
 
     int getImsSwitch() {
         int serial = RilHolder.INSTANCE.prepareBlock(mSlotId);
@@ -105,7 +110,7 @@ public class HwMmTelFeature extends MmTelFeature {
     private void registerImsInner() {
         try {
             Log.d(LOG_TAG, "registerImsInner");
-            RilHolder.INSTANCE.getRadio(mSlotId).imsRegister(RilHolder.INSTANCE.callback((radioResponseInfo, rspMsgPayload) -> {
+            RilHolder.INSTANCE.getHisiRadio(mSlotId).imsRegister(RilHolder.INSTANCE.hisicallback((radioResponseInfo, rspMsgPayload) -> {
                 if (radioResponseInfo.error != 0) {
                     Log.e(LOG_TAG, "radiorespinfo gives error " + radioResponseInfo.error);
                     HwImsService.Companion.getInstance().getRegistration(mSlotId).onDeregistered(new ImsReasonInfo(ImsReasonInfo.CODE_UNSPECIFIED, radioResponseInfo.error, radioResponseInfo.toString() + rspMsgPayload.toString()));
@@ -145,18 +150,7 @@ public class HwMmTelFeature extends MmTelFeature {
 
     public void unregisterIms() {
         Log.d(LOG_TAG, "unregisterIms");
-        try {
-            RilHolder.INSTANCE.getRadio(mSlotId).setImsSwitch(RilHolder.INSTANCE.callback((radioResponseInfo, rspMsgPayload) -> {
-                if (radioResponseInfo.error != 0) {
-                    // What can we do?
-                    Log.e(LOG_TAG, "Failed to unregister imsswitch");
-                }
-                return null;
-            }, mSlotId), 0);
-            mbImsRegister=false;
-        } catch (RemoteException e) {
-            Log.e(LOG_TAG, "Failed to setImsSwitch to unregister", e);
-        }
+
     }
 
     @Override

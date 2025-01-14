@@ -1,6 +1,6 @@
 /*
  * This file is part of HwIms
- * Copyright (C) 2019 Penn Mackintosh
+ * Copyright (C) 2019,2025 Penn Mackintosh and Raphael Mounier
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
@@ -30,10 +30,10 @@ import android.telephony.ims.ImsStreamMediaProfile
 import android.telephony.ims.stub.ImsCallSessionImplBase
 import android.util.Log
 import com.android.ims.ImsConfig
-import vendor.huawei.hardware.radio.V1_0.RILImsCall
-import vendor.huawei.hardware.radio.V1_0.RILImsCallDomain
-import vendor.huawei.hardware.radio.V1_0.RILImsCallType
-import vendor.huawei.hardware.radio.V1_0.RILImsDial
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsCall
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallDomain
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallType
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsDial
 import java.util.concurrent.ConcurrentHashMap
 
 class HwImsCallSession
@@ -215,7 +215,7 @@ class HwImsCallSession
     override fun setMute(muted: Boolean) {
         try {
             val serial = RilHolder.prepareBlock(mSlotId)
-            RilHolder.getRadio(mSlotId)!!.setMute(serial, muted)
+            RilHolder.getImsRadio(mSlotId)!!.setMute(serial, muted)
             if (RilHolder.blockUntilComplete(serial).error != 0) {
                 Rlog.e(tag, "Failed to setMute! " + RilHolder.blockUntilComplete(serial))
             }
@@ -267,7 +267,7 @@ class HwImsCallSession
         try {
             Rlog.d(tag, "adding to awaiting id from ril")
             awaitingIdFromRIL[mCallee] = this // Do it sooner rather than later so that this call is not seen as a phantom
-            RilHolder.getRadio(mSlotId)!!.imsDial(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.imsDial(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error == 0) {
                     Rlog.d(tag, "successfully placed call")
                     mInCall = true
@@ -297,7 +297,7 @@ class HwImsCallSession
     override fun accept(callType: Int, profile: ImsStreamMediaProfile?) {
         mState = State.ESTABLISHING
         try {
-            RilHolder.getRadio(mSlotId)!!.acceptImsCall(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.acceptImsCall(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error != 0) {
                     listener?.callSessionInitiatedFailed(ImsReasonInfo())
                     Rlog.e(tag, "error accepting ims call")
@@ -321,7 +321,7 @@ class HwImsCallSession
         /*
         try {
             getRilCallId();
-            RilHolder.INSTANCE.getRadio(mSlotId).rejectCallWithReason(RilHolder.callback((radioResponseInfo, rspMsgPayload) -> {
+            RilHolder.INSTANCE.getImsRadio(mSlotId).rejectCallWithReason(RilHolder.callback((radioResponseInfo, rspMsgPayload) -> {
                 if (radioResponseInfo.error == 0) {
                     Rlog.d(tag, "Rejected incoming call.");
                 } else {
@@ -337,7 +337,7 @@ class HwImsCallSession
         mState = State.TERMINATING
         try {
             getRilCallId()
-            RilHolder.getRadio(mSlotId)!!.hangup(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.hangup(RilHolder.callback({ radioResponseInfo, _ ->
                 Rlog.d(tag, "got cb for hangup!")
                 if (radioResponseInfo.error != 0) {
                     mState = State.INVALID
@@ -374,7 +374,7 @@ class HwImsCallSession
         try {
             getRilCallId()
             Rlog.d(tag, "terminating call...")
-            RilHolder.getRadio(mSlotId)!!.hangup(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.hangup(RilHolder.callback({ radioResponseInfo, _ ->
                 Rlog.d(tag, "got cb for hangup!")
                 if (radioResponseInfo.error != 0) {
                     mState = State.INVALID
@@ -395,7 +395,7 @@ class HwImsCallSession
 
     override fun hold(profile: ImsStreamMediaProfile?) {
         try {
-            RilHolder.getRadio(mSlotId)!!.switchWaitingOrHoldingAndActive(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.switchWaitingOrHoldingAndActive(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error == 0) {
                     listener?.callSessionHeld(mProfile)
                 } else {
@@ -410,7 +410,7 @@ class HwImsCallSession
 
     override fun resume(profile: ImsStreamMediaProfile?) {
         try {
-            RilHolder.getRadio(mSlotId)!!.switchWaitingOrHoldingAndActive(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.switchWaitingOrHoldingAndActive(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error == 0) {
                     listener?.callSessionResumed(mProfile)
                 } else {
@@ -427,7 +427,7 @@ class HwImsCallSession
 
     override fun merge() {
         try {
-            RilHolder.getRadio(mSlotId)!!.conference(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.conference(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error == 0) {
                     // Do nothing, notifyConfDone will be called by the RadioResponse code (triggered by RadioIndication)
                 } else {
@@ -463,7 +463,7 @@ class HwImsCallSession
 
     override fun sendDtmf(c: Char, m: Message?) {
         try {
-            RilHolder.getRadio(mSlotId)!!.sendDtmf(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.sendDtmf(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error != 0) {
                     Rlog.e(tag, "send DTMF error!")
                     //TODO we need to reply don't we? Respond with an error to DTMF
@@ -487,7 +487,7 @@ class HwImsCallSession
 
     override fun startDtmf(c: Char) {
         try {
-            RilHolder.getRadio(mSlotId)!!.startDtmf(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.startDtmf(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error != 0) {
                     Rlog.e(tag, "DTMF error!")
                 } else {
@@ -502,7 +502,7 @@ class HwImsCallSession
 
     override fun stopDtmf() {
         try {
-            RilHolder.getRadio(mSlotId)!!.stopDtmf(RilHolder.callback({ radioResponseInfo, _ ->
+            RilHolder.getImsRadio(mSlotId)!!.stopDtmf(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error != 0) {
                     Rlog.e(tag, "stop DTMF error!")
                 } else {

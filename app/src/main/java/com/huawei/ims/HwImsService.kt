@@ -1,6 +1,6 @@
 /*
  * This file is part of HwIms
- * Copyright (C) 2019,2022 Penn Mackintosh and Raphael Mounier
+ * Copyright (C) 2019,2025 Penn Mackintosh and Raphael Mounier
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +17,9 @@
 
 package com.huawei.ims
 
+import android.app.NotificationManager
 import android.content.*
+import android.support.v4.content.ContextCompat.getSystemService
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.telephony.ims.ImsService
@@ -25,7 +27,7 @@ import android.telephony.ims.feature.ImsFeature
 import android.telephony.ims.stub.ImsConfigImplBase
 import android.telephony.ims.stub.ImsFeatureConfiguration
 import android.util.Log
-//import android.telephony.Rlog
+import android.telephony.Rlog
 
 import android.os.SystemProperties
 
@@ -47,12 +49,12 @@ class HwImsService : ImsService() {
         val storageContext: Context
 
         Log.i(LOG_TAG, "HwImsService (Iceows) version " + BuildConfig.GIT_HASH + " created!")
-        subscriptionManager = getSystemService(SubscriptionManager::class.java)
-        telephonyManager = getSystemService(TelephonyManager::class.java)
+        subscriptionManager = getSystemService(SubscriptionManager::class.java) as SubscriptionManager
+        telephonyManager = getSystemService(TelephonyManager::class.java) as TelephonyManager
 
         // To disable/enable volte
         isVolteEnable=SystemProperties.getInt("ro.hw.volte.enable", 0)
-
+        Log.i(LOG_TAG, "HwImsService isVolte= " + isVolteEnable)
 
         // support direct boot mode (Build.VERSION.SDK_INT> N)
         // All N devices have split storage areas, but we may need to
@@ -99,6 +101,7 @@ class HwImsService : ImsService() {
         Log.i(LOG_TAG, "querySupportedImsFeatures...")
 
         if (isVolteEnable==1) {
+            Log.i(LOG_TAG, "Volte is enable - queryfeatures for all modem")
             if (prefs!!.getBoolean("ims0", true)) {
                 Log.i(LOG_TAG, "querySupportedImsFeatures...add FEATURE_MMTEL on ims0")
                 builder.addFeature(0, ImsFeature.FEATURE_MMTEL)
@@ -149,13 +152,18 @@ class HwImsService : ImsService() {
         return this.registrations[slotId]
     }
 
+
     companion object {
         private const val LOG_TAG = "HwImsService"
         var instance: HwImsService? = null
 
         fun supportsDualIms(context: Context): Boolean {
-            //MODEM_CAP_SUPPORT_DUAL_VOLTE = 21
-            return HwModemCapability.isCapabilitySupport(21) && context.getSystemService(TelephonyManager::class.java).phoneCount > 1
+            if (context.getSystemService(TelephonyManager::class.java).phoneCount > 1) {
+                //MODEM_CAP_SUPPORT_DUAL_VOLTE = 21
+                return HwModemCapability.isCapabilitySupport(21)
+            }
+            Log.i(LOG_TAG,"the device is not support multisim")
+            return false
         }
     }
 
