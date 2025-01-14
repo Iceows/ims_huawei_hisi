@@ -1,6 +1,6 @@
 /*
  * This file is part of HwIms
- * Copyright (C) 2019,2022 Penn Mackintosh and Raphael Mounier
+ * Copyright (C) 2019,2025 Penn Mackintosh and Raphael Mounier
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
@@ -17,24 +17,56 @@
 
 package com.huawei.ims
 
-import android.hardware.radio.V1_0.*
+
 import android.os.Bundle
 import android.telephony.Rlog
 import android.telephony.ims.ImsCallProfile
 import android.util.Log
 import com.android.ims.ImsManager
-import vendor.huawei.hardware.radio.V1_0.*
-import vendor.huawei.hardware.radio.V1_0.IRadioResponse
+import vendor.huawei.hardware.radio.ims.V1_0.*
+import vendor.huawei.hardware.radio.ims.V1_0.IRadioImsResponse
+import vendor.huawei.hardware.radio.ims.V1_0.LastCallFailCauseInfo
 import java.util.*
 
-class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadioResponse.Stub() {
+
+/*
+package vendor.huawei.hardware.radio.ims.V1_0;
+void RspMsg(RadioResponseInfo radioResponseInfo, int i, RspMsgPayload rspMsgPayload) throws RemoteException;
+void conferenceResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void explicitCallTransferResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void getCurrentImsCallsResponse(RadioResponseInfo radioResponseInfo, ArrayList<RILImsCall> arrayList) throws RemoteException;
+void getCurrentImsCallsResponseV1_2(RadioResponseInfo radioResponseInfo, ArrayList<RILImsCallV1_2> arrayList) throws RemoteException;
+void getCurrentImsCallsWithImsDomainResponse(RadioResponseInfo radioResponseInfo, ArrayList<RILImsCallEx> arrayList) throws RemoteException;
+void getImsRegistrationStateResponse(RadioResponseInfo radioResponseInfo, boolean z, int i) throws RemoteException;
+void getLastCallFailCauseResponse(RadioResponseInfo radioResponseInfo, LastCallFailCauseInfo lastCallFailCauseInfo) throws RemoteException;
+void hangupConnectionResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void hangupForegroundResumeBackgroundResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void hangupWaitingOrBackgroundResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void rejectCallResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void sendDtmfResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void setClirResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void setImsRegErrReportResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void setMuteResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void startDtmfResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void stopDtmfResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void switchWaitingOrHoldingAndActiveResponse(RadioResponseInfo radioResponseInfo) throws RemoteException;
+void uiccAuthResponse(RadioResponseInfo radioResponseInfo, RILUICCAUTHRESPONSE riluiccauthresponse) throws RemoteException;
+
+*/
+
+class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadioImsResponse.Stub() {
     private val LOG_TAG = "HwImsRadioResponse"
 
-    override fun RspMsg(radioResponseInfo: RadioResponseInfo, msgType: Int, rspMsgPayload: RspMsgPayload?) {
+    override fun RspMsg(
+        radioResponseInfo: RadioResponseInfo?,
+        msgType: Int,
+        rspMsgPayload: RspMsgPayload?
+    ) {
         Log.i(LOG_TAG, "rspmsg radioresponseinfo = $radioResponseInfo,msgtype=$msgType")
-        Log.i(LOG_TAG, "serial " + radioResponseInfo.serial)
+        Log.i(LOG_TAG, "serial " + radioResponseInfo)
         Log.i(LOG_TAG, "type=" + RespCode.getName(msgType))
         Log.i(LOG_TAG, "slotID=" + mSlotId)
+
         /*switch (msgType) {
             case PASS_1:
             case PASS_2:
@@ -54,54 +86,20 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
 
         }*/
         // Huawei
-        RilHolder.triggerCB(radioResponseInfo.serial, radioResponseInfo, rspMsgPayload)
+        radioResponseInfo?.let { RilHolder.triggerImsCB(it.serial, radioResponseInfo, rspMsgPayload) }
 
     }
-    /*
-    public static final int IMS_DIAL_RESPONSE = 0XDC;
-    public static final int SET_IMS_CALL_WAITING_RESPONSE = 0X100;
-    public static final int GET_LTE_INFO_RESPONSE = 0X136;
-    public static final int ACCEPT_IMS_CALL_RESPONSE = 0XE7;
-    public static final int SET_DMPCSCF_RESPONSE = 0X13C;
-    public static final int SET_DMDYN_RESPONSE = 0X13D;
-    public static final int SET_DMTIMER_RESPONSE = 0X13E;
-    public static final int SET_DMSMS_RESPONSE = 0X13F;
-    public static final int GET_DMPCSCF_RESPONSE = 0X140;
-    public static final int GET_DMTIMER_RESPONSE = 0X141;
-    public static final int GET_DMDYN_RESPONSE = 0X142;
-    public static final int GET_DMSMS_RESPONSE = 0X143;
-    public static final int GET_DMUSER_RESPONSE = 0X144;
-    public static final int WIFI_EMERGENCY_AID = 0X151;
-    public static final int SEND_BATTERY_STATUS_RESPONSE = 0X147;
-    public static final int MODIFY_IMS_CALL_INITIATE_RESPONSE = 0X113;
-    public static final int MODIFY_IMS_CALL_CONFIRM_RESPONSE = 0X114;
-    public static final int GET_IMS_IMPU_RESPONSE = 0XF6;
-    public static final int SET_IMS_VT_CAPABILITY_RESPONSE = 0X150;
-    public static final int IMS_LAST_CALL_FAIL_REASON_INFO_RESPONSE = 0X14F;
-    public static final int SWITCH_WAITING_OR_HOLDING_AND_ACTIVE_FOR_IMS_RESPONSE = 0X156;
-    public static final int PASS_1 = 0XE3;
-    public static final int PASS_2 = 0X35;
-    public static final int PASS_3 = 0X36;*/
-    /*
-    public static final int IMS_DEF1 = 0x124;
-	type=292 = 0x124
-    type=293 = 0x125
-	type=328 = 0x148
-    */
 
-    override fun deactivateDataCallEmergencyResponse(radioResponseInfo: RadioResponseInfo) {
-        // Huawei
+    override fun conferenceResponse(p0: RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun getAvailableCsgIdsResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<CsgNetworkInfo>) {
-        // Huawei
+    override fun explicitCallTransferResponse(p0: RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun getCellInfoListOtdoaResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<CellInfo>) {
-        //   Huawei
-    }
-
-    override fun getCurrentImsCallsResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<RILImsCall>) {
+    override fun getCurrentImsCallsResponse(radioResponseInfo: RadioResponseInfo?, arrayList: ArrayList<RILImsCall>)
+    {
         // Huawei
         Log.i(LOG_TAG, "getCurrentImsCallsResponse on slotID " + mSlotId)
         synchronized(HwImsCallSession.sCallsLock) {
@@ -167,247 +165,33 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
     private fun redactCall(call: RILImsCall): String {
         return "{.state = " + call.state + ", .index = " + call.index + ", .toa = " + call.toa + ", .isMpty = " + call.isMpty + ", .isMT = " + call.isMT + ", .als = " + call.als + ", .isVoice = " + call.isVoice + ", .isVoicePrivacy = " + call.isVoicePrivacy + ", .number = " + Rlog.pii(LOG_TAG, call.number) + ", .numberPresentation = " + call.numberPresentation + ", .name = " + Rlog.pii(LOG_TAG, call.name) + ", .namePresentation = " + call.namePresentation + ", .callDetails = " + call.callDetails.toString() + ", .isEConference = " + call.isECOnference + ", .peerVideoSupport = " + call.peerVideoSupport + "}"
     }
-
-    override fun getDeviceVersionResponse(radioResponseInfo: RadioResponseInfo, rilDeviceVersionResponse: RILDeviceVersionResponse) {
-        // Huawei
+    override fun getCurrentImsCallsResponseV1_2(
+        p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?,
+        p1: ArrayList<RILImsCallV1_2>?
+    ) {
+        TODO("Not yet implemented")
     }
 
-    override fun getDsFlowInfoResponse(radioResponseInfo: RadioResponseInfo, rilDsFlowInfoResponse: RILDsFlowInfoResponse) {
-        // Huawei
+    override fun getCurrentImsCallsWithImsDomainResponse(
+        p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?,
+        p1: ArrayList<RILImsCallEx>?
+    ) {
+        TODO("Not yet implemented")
     }
 
-    override fun getPolListResponse(radioResponseInfo: RadioResponseInfo, rilPreferredPLMNSelector: RILPreferredPLMNSelector) {
-        // Huawei
+    override fun getImsRegistrationStateResponse(
+        p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?,
+        p1: Boolean,
+        p2: Int
+    ) {
+        TODO("Not yet implemented")
     }
 
-    override fun getSystemInfoExResponse(radioResponseInfo: RadioResponseInfo, rilradiosysinfo: RILRADIOSYSINFO) {
-        // Huawei
-    }
-
-    override fun manualSelectionCsgIdResponse(radioResponseInfo: RadioResponseInfo) {
-        // Huawei
-    }
-
-    override fun setupDataCallEmergencyResponse(radioResponseInfo: RadioResponseInfo, setupDataCallResult: SetupDataCallResult) {
-        // Huawei
-    }
-
-    override fun uiccAuthResponse(radioResponseInfo: RadioResponseInfo, riluiccauthresponse: RILUICCAUTHRESPONSE) {
-        // Huawei
-    }
-
-    // END OF HUAWEI METHODS
-
-    override fun acceptCallResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun acknowledgeIncomingGsmSmsWithPduResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun acknowledgeLastIncomingCdmaSmsResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun acknowledgeLastIncomingGsmSmsResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun acknowledgeRequest(i: Int) {
-
-    }
-
-    override fun cancelPendingUssdResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun changeIccPin2ForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun changeIccPinForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun conferenceResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun deactivateDataCallResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun deleteSmsOnRuimResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun deleteSmsOnSimResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun dialResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun exitEmergencyCallbackModeResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun explicitCallTransferResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun getAllowedCarriersResponse(radioResponseInfo: RadioResponseInfo, b: Boolean, carrierRestrictions: CarrierRestrictions) {
-
-    }
-
-    override fun getAvailableBandModesResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<Int>) {
-
-    }
-
-    override fun getAvailableNetworksResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<OperatorInfo>) {
-
-    }
-
-    override fun getBasebandVersionResponse(radioResponseInfo: RadioResponseInfo, s: String) {
-
-    }
-
-    override fun getCDMASubscriptionResponse(radioResponseInfo: RadioResponseInfo, s: String, s1: String, s2: String, s3: String, s4: String) {
-
-    }
-
-    override fun getCallForwardStatusResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<CallForwardInfo>) {
-
-    }
-
-    override fun getCallWaitingResponse(radioResponseInfo: RadioResponseInfo, b: Boolean, i: Int) {
-
-    }
-
-    override fun getCdmaBroadcastConfigResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<CdmaBroadcastSmsConfigInfo>) {
-
-    }
-
-    override fun getCdmaRoamingPreferenceResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun getCdmaSubscriptionSourceResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun getCellInfoListResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<CellInfo>) {
-
-    }
-
-    override fun getClipResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun getClirResponse(radioResponseInfo: RadioResponseInfo, i: Int, i1: Int) {
-
-    }
-
-    override fun getCurrentCallsResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<Call>) {
-
-    }
-
-    override fun getDataCallListResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<SetupDataCallResult>) {
-
-    }
-
-    override fun getDataRegistrationStateResponse(radioResponseInfo: RadioResponseInfo, dataRegStateResult: DataRegStateResult) {
-
-    }
-
-    override fun getDeviceIdentityResponse(radioResponseInfo: RadioResponseInfo, s: String, s1: String, s2: String, s3: String) {
-
-    }
-
-    override fun getFacilityLockForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun getGsmBroadcastConfigResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<GsmBroadcastSmsConfigInfo>) {
-
-    }
-
-    override fun getHardwareConfigResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<HardwareConfig>) {
-
-    }
-
-    override fun getIMSIForAppResponse(radioResponseInfo: RadioResponseInfo, s: String) {
-
-    }
-
-    override fun getIccCardStatusResponse(radioResponseInfo: RadioResponseInfo, cardStatus: CardStatus) {
-
-    }
-
-    override fun getImsRegistrationStateResponse(radioResponseInfo: RadioResponseInfo, b: Boolean, i: Int) {
-
-    }
-
-    override fun getLastCallFailCauseResponse(radioResponseInfo: RadioResponseInfo, lastCallFailCauseInfo: LastCallFailCauseInfo) {
-
-    }
-
-    override fun getModemActivityInfoResponse(radioResponseInfo: RadioResponseInfo, activityStatsInfo: ActivityStatsInfo) {
-
-    }
-
-    override fun getMuteResponse(radioResponseInfo: RadioResponseInfo, b: Boolean) {
-
-    }
-
-    override fun getNeighboringCidsResponse(radioResponseInfo: RadioResponseInfo, arrayList: ArrayList<NeighboringCell>) {
-
-    }
-
-    override fun getNetworkSelectionModeResponse(radioResponseInfo: RadioResponseInfo, b: Boolean) {
-
-    }
-
-    override fun getOperatorResponse(radioResponseInfo: RadioResponseInfo, s: String, s1: String, s2: String) {
-
-    }
-
-    override fun getPreferredNetworkTypeResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun getPreferredVoicePrivacyResponse(radioResponseInfo: RadioResponseInfo, b: Boolean) {
-
-    }
-
-    override fun getRadioCapabilityResponse(radioResponseInfo: RadioResponseInfo, radioCapability: RadioCapability) {
-
-    }
-
-    override fun getSignalStrengthResponse(radioResponseInfo: RadioResponseInfo, signalStrength: SignalStrength) {
-
-    }
-
-    override fun getSmscAddressResponse(radioResponseInfo: RadioResponseInfo, s: String) {
-
-    }
-
-    override fun getTTYModeResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun getVoiceRadioTechnologyResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun getVoiceRegistrationStateResponse(radioResponseInfo: RadioResponseInfo, voiceRegStateResult: VoiceRegStateResult) {
-
-    }
-
-    override fun handleStkCallSetupRequestFromSimResponse(radioResponseInfo: RadioResponseInfo) {
-
+    override fun getLastCallFailCauseResponse(
+        p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?,
+        p1: LastCallFailCauseInfo?
+    ) {
+        TODO("Not yet implemented")
     }
 
     override fun hangupConnectionResponse(radioResponseInfo: RadioResponseInfo) {
@@ -422,297 +206,78 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         RspMsg(radioResponseInfo, -1, null)
     }
 
-    override fun iccCloseLogicalChannelResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun iccIOForAppResponse(radioResponseInfo: RadioResponseInfo, iccIoResult: IccIoResult) {
-
-    }
-
-    override fun iccOpenLogicalChannelResponse(radioResponseInfo: RadioResponseInfo, i: Int, arrayList: ArrayList<Byte>) {
-
-    }
-
-    override fun iccTransmitApduBasicChannelResponse(radioResponseInfo: RadioResponseInfo, iccIoResult: IccIoResult) {
-
-    }
-
-    override fun iccTransmitApduLogicalChannelResponse(radioResponseInfo: RadioResponseInfo, iccIoResult: IccIoResult) {
-
-    }
-
-    override fun nvReadItemResponse(radioResponseInfo: RadioResponseInfo, s: String) {
-
-    }
-
-    override fun nvResetConfigResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun nvWriteCdmaPrlResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun nvWriteItemResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun pullLceDataResponse(radioResponseInfo: RadioResponseInfo, lceDataInfo: LceDataInfo) {
-
-    }
-
     override fun rejectCallResponse(radioResponseInfo: RadioResponseInfo) {
         RspMsg(radioResponseInfo, -1, null)
     }
 
-    override fun reportSmsMemoryStatusResponse(radioResponseInfo: RadioResponseInfo) {
 
+    override fun sendDtmfResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun reportStkServiceIsRunningResponse(radioResponseInfo: RadioResponseInfo) {
-
+    override fun setClirResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun requestIccSimAuthenticationResponse(radioResponseInfo: RadioResponseInfo, iccIoResult: IccIoResult) {
-
+    override fun setImsRegErrReportResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun requestIsimAuthenticationResponse(radioResponseInfo: RadioResponseInfo, s: String) {
-
+    override fun setMuteResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun requestShutdownResponse(radioResponseInfo: RadioResponseInfo) {
-
+    override fun startDtmfResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun sendBurstDtmfResponse(radioResponseInfo: RadioResponseInfo) {
-
+    override fun stopDtmfResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun sendCDMAFeatureCodeResponse(radioResponseInfo: RadioResponseInfo) {
-
+    override fun switchWaitingOrHoldingAndActiveResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        TODO("Not yet implemented")
     }
 
-    override fun sendCdmaSmsResponse(radioResponseInfo: RadioResponseInfo, sendSmsResult: SendSmsResult) {
-
+    override fun uiccAuthResponse(
+        p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?,
+        p1: RILUICCAUTHRESPONSE?
+    ) {
+        TODO("Not yet implemented")
     }
+    /*
+    public static final int IMS_DIAL_RESPONSE = 0XDC;
+    public static final int SET_IMS_CALL_WAITING_RESPONSE = 0X100;
+    public static final int GET_LTE_INFO_RESPONSE = 0X136;
+    public static final int ACCEPT_IMS_CALL_RESPONSE = 0XE7;
+    public static final int SET_DMPCSCF_RESPONSE = 0X13C;
+    public static final int SET_DMDYN_RESPONSE = 0X13D;
+    public static final int SET_DMTIMER_RESPONSE = 0X13E;
+    public static final int SET_DMSMS_RESPONSE = 0X13F;
+    public static final int GET_DMPCSCF_RESPONSE = 0X140;
+    public static final int GET_DMTIMER_RESPONSE = 0X141;
+    public static final int GET_DMDYN_RESPONSE = 0X142;
+    public static final int GET_DMSMS_RESPONSE = 0X143;
+    public static final int GET_DMUSER_RESPONSE = 0X144;
+    public static final int WIFI_EMERGENCY_AID = 0X151;
+    public static final int SEND_BATTERY_STATUS_RESPONSE = 0X147;
+    public static final int MODIFY_IMS_CALL_INITIATE_RESPONSE = 0X113;
+    public static final int MODIFY_IMS_CALL_CONFIRM_RESPONSE = 0X114;
+    public static final int GET_IMS_IMPU_RESPONSE = 0XF6;
+    public static final int SET_IMS_VT_CAPABILITY_RESPONSE = 0X150;
+    public static final int IMS_LAST_CALL_FAIL_REASON_INFO_RESPONSE = 0X14F;
+    public static final int SWITCH_WAITING_OR_HOLDING_AND_ACTIVE_FOR_IMS_RESPONSE = 0X156;
+    public static final int PASS_1 = 0XE3;
+    public static final int PASS_2 = 0X35;
+    public static final int PASS_3 = 0X36;*/
+    /*
+    public static final int IMS_DEF1 = 0x124;
+	type=292 = 0x124
+    type=293 = 0x125
+	type=328 = 0x148
+    */
 
-    override fun sendDeviceStateResponse(radioResponseInfo: RadioResponseInfo) {
 
-    }
-
-    override fun sendDtmfResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun sendEnvelopeResponse(radioResponseInfo: RadioResponseInfo, s: String) {
-
-    }
-
-    override fun sendEnvelopeWithStatusResponse(radioResponseInfo: RadioResponseInfo, iccIoResult: IccIoResult) {
-
-    }
-
-    override fun sendImsSmsResponse(radioResponseInfo: RadioResponseInfo, sendSmsResult: SendSmsResult) {
-
-    }
-
-    override fun sendSMSExpectMoreResponse(radioResponseInfo: RadioResponseInfo, sendSmsResult: SendSmsResult) {
-
-    }
-
-    override fun sendSmsResponse(radioResponseInfo: RadioResponseInfo, sendSmsResult: SendSmsResult) {
-
-    }
-
-    override fun sendTerminalResponseToSimResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun sendUssdResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun separateConnectionResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setAllowedCarriersResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun setBandModeResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setBarringPasswordResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setCallForwardResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setCallWaitingResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setCdmaBroadcastActivationResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setCdmaBroadcastConfigResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setCdmaRoamingPreferenceResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setCdmaSubscriptionSourceResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setCellInfoListRateResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setClirResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setDataAllowedResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setDataProfileResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setFacilityLockForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun setGsmBroadcastActivationResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setGsmBroadcastConfigResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setIndicationFilterResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setInitialAttachApnResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setLocationUpdatesResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setMuteResponse(radioResponseInfo: RadioResponseInfo) {
-        RspMsg(radioResponseInfo, -1, null)
-    }
-
-    override fun setNetworkSelectionModeAutomaticResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setNetworkSelectionModeManualResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setPreferredNetworkTypeResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setPreferredVoicePrivacyResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setRadioCapabilityResponse(radioResponseInfo: RadioResponseInfo, radioCapability: RadioCapability) {
-
-    }
-
-    override fun setRadioPowerResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setSimCardPowerResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setSmscAddressResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setSuppServiceNotificationsResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setTTYModeResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setUiccSubscriptionResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun setupDataCallResponse(radioResponseInfo: RadioResponseInfo, setupDataCallResult: SetupDataCallResult) {
-
-    }
-
-    override fun startDtmfResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun startLceServiceResponse(radioResponseInfo: RadioResponseInfo, lceStatusInfo: LceStatusInfo) {
-
-    }
-
-    override fun stopDtmfResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun stopLceServiceResponse(radioResponseInfo: RadioResponseInfo, lceStatusInfo: LceStatusInfo) {
-
-    }
-
-    override fun supplyIccPin2ForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun supplyIccPinForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun supplyIccPuk2ForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun supplyIccPukForAppResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun supplyNetworkDepersonalizationResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun switchWaitingOrHoldingAndActiveResponse(radioResponseInfo: RadioResponseInfo) {
-
-    }
-
-    override fun writeSmsToRuimResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
-
-    override fun writeSmsToSimResponse(radioResponseInfo: RadioResponseInfo, i: Int) {
-
-    }
 
     enum class RespCode(var value: Int) {
         IMS_DIAL_RESPONSE(0xdc), SET_IMS_CALL_WAITING_RESPONSE(0x100),
