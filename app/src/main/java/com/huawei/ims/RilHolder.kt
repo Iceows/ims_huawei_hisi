@@ -54,7 +54,6 @@ object RilHolder {
     private val indicationHisiCallbacks = arrayOfNulls<HwHisiRadioIndication>(3)
     private val hisicallbacks = ConcurrentHashMap<Int, (vendor.huawei.hardware.hisiradio.V1_0.RadioResponseInfo, vendor.huawei.hardware.hisiradio.V1_0.RspMsgPayload?) -> Unit>()
 
-
     // IMS radio - hal vendor.huawei.hardware.radio.ims@1.0::IRadioIms
     private val serviceImsNames = arrayOf("rildi", "rildi2", "rildi3")
     private val radioImsImpls = arrayOfNulls<IRadioIms>(3)
@@ -68,7 +67,6 @@ object RilHolder {
     private val indicationCallbacks = arrayOfNulls<HwRadioIndication>(3)
     private val radioImpls = arrayOfNulls<IRadio>(3)
     private val callbacks = ConcurrentHashMap<Int, (vendor.huawei.hardware.radio.V2_0.RadioResponseInfo, vendor.huawei.hardware.radio.V2_0.RspMsgPayload?) -> Unit>()
-
 
     private var nextSerial = -1
     private val serialToSlot = ConcurrentHashMap<Int, Int>()
@@ -244,7 +242,7 @@ object RilHolder {
         val serial = getNextSerial()
         serialToSlot[serial] = slotId
         imscallbacks[serial] = cb
-        Log.v(LOG_TAG, "Setting callback for serial $serial")
+        Log.v(LOG_TAG, "Setting imscallback for serial $serial")
         return serial
     }
 
@@ -253,7 +251,7 @@ object RilHolder {
         val serial = getNextSerial()
         serialToSlot[serial] = slotId
         hisicallbacks[serial] = cb
-        Log.v(LOG_TAG, "Setting callback for serial $serial")
+        Log.v(LOG_TAG, "Setting hisicallback for serial $serial")
         return serial
     }
     @Synchronized
@@ -262,19 +260,19 @@ object RilHolder {
     }
 
     fun triggerImsCB(serial: Int, radioResponseInfo: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo, rspMsgPayload: vendor.huawei.hardware.radio.ims.V1_0.RspMsgPayload?) {
-        Log.i(LOG_TAG, "Incoming response for slot " + serialToSlot[serial] + ", serial " + serial + ", radioResponseInfo " + radioResponseInfo + ", rspMsgPayload " + rspMsgPayload)
+        Log.i(LOG_TAG, "triggerImsCB - Incoming response for slot " + serialToSlot[serial] + ", serial " + serial + ", radioResponseInfo " + radioResponseInfo + ", rspMsgPayload " + rspMsgPayload)
         if (imscallbacks.containsKey(serial))
             imscallbacks[serial]!!(radioResponseInfo, rspMsgPayload)
     }
 
     fun triggerCB(serial: Int, radioResponseInfo: vendor.huawei.hardware.radio.V2_0.RadioResponseInfo, rspMsgPayload: vendor.huawei.hardware.radio.V2_0.RspMsgPayload?) {
-        Log.i(LOG_TAG, "Incoming response for slot " + serialToSlot[serial] + ", serial " + serial + ", radioResponseInfo " + radioResponseInfo + ", rspMsgPayload " + rspMsgPayload)
+        Log.i(LOG_TAG, "triggerCB - Incoming response for slot " + serialToSlot[serial] + ", serial " + serial + ", radioResponseInfo " + radioResponseInfo + ", rspMsgPayload " + rspMsgPayload)
         if (callbacks.containsKey(serial))
             callbacks[serial]!!(radioResponseInfo, rspMsgPayload)
     }
 
     fun triggerHisiCB(serial: Int, radioResponseInfo: vendor.huawei.hardware.hisiradio.V1_0.RadioResponseInfo, rspMsgPayload: vendor.huawei.hardware.hisiradio.V1_0.RspMsgPayload?) {
-        Log.i(LOG_TAG, "Incoming response for slot " + serialToSlot[serial] + ", serial " + serial + ", radioResponseInfo " + radioResponseInfo + ", rspMsgPayload " + rspMsgPayload)
+        Log.i(LOG_TAG, "triggerHisiCB - Incoming response for slot " + serialToSlot[serial] + ", serial " + serial + ", radioResponseInfo " + radioResponseInfo + ", rspMsgPayload " + rspMsgPayload)
         if (hisicallbacks.containsKey(serial))
             hisicallbacks[serial]!!(radioResponseInfo, rspMsgPayload)
     }
