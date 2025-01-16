@@ -21,8 +21,16 @@ package com.huawei.ims
 import android.os.RemoteException
 import android.telephony.Rlog
 import android.util.Log
-import vendor.huawei.hardware.radio.ims.V1_0.*
 import vendor.huawei.hardware.radio.ims.V1_0.IRadioImsIndication
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallModify
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsHandover
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsModifyEndCause
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsMtStatusReport
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsRegErrReport
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsSrvstatusList
+import vendor.huawei.hardware.radio.ims.V1_0.RILImsSuppSvcNotification
+import vendor.huawei.hardware.radio.ims.V1_0.RILUnsolMsgPayload
+import vendor.huawei.hardware.radio.ims.V1_0.RILVtFlowInfoReport
 import vendor.huawei.hardware.radio.ims.V1_0.RilConstS32.*
 
 

@@ -30,6 +30,11 @@ class HwRadioIndication internal constructor(private val mSlotId: Int) : IRadioI
 
         Log.d(LOG_TAG, "indicationType = $indicationType, msgId = $msgId, msgPayload = $rILUnsolMsgPayload")
 
+        // D HwRadioIndication: indicationType = 1, msgId = 2021, msgPayload = {.nData = 0, .nDatas = [], .strData = 20820, .strDatas = []}
+        // D HwRadioIndication: indicationType = 1, msgId = 2023, msgPayload = {.nData = 1, .nDatas = [2], .strData = , .strDatas = []}
+        // D HwRadioIndication: indicationType = 1, msgId = 2025, msgPayload = {.nData = 0, .nDatas = [], .strData = 112,911,112, .strDatas = []}
+        // D HwRadioIndication: indicationType = 1, msgId = 2054, msgPayload = {.nData = 0, .nDatas = [], .strData = 20810, .strDatas = []}
+
         // Huawei RilConstS32.java on package vendor.huawei.hardware.radio.V2_0;
         when (msgId) {
 
@@ -38,6 +43,7 @@ class HwRadioIndication internal constructor(private val mSlotId: Int) : IRadioI
             RIL_UNSOL_HW_CS_CHANNEL_INFO_IND-> hwCsChannelInfo(indicationType);
             RIL_UNSOL_HW_ECCNUM-> hwEccNum(indicationType);
             RIL_UNSOL_HW_EXIST_NETWORK_INFO -> hwExistNetWorkInfo(indicationType);
+
             else -> Log.w(LOG_TAG, "Unknown msg type :$msgId")
         }
 
