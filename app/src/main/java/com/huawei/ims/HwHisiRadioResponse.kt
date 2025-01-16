@@ -52,7 +52,7 @@ class HwHisiRadioResponse internal constructor(private val mSlotId: Int) : IHisi
         Log.i(LOG_TAG, "slotID=" + mSlotId)
 
         // Huawei
-    radioResponseInfo?.let { RilHolder.triggerHisiCB(it.serial, radioResponseInfo, rspMsgPayload) }
+        radioResponseInfo?.let { RilHolder.triggerHisiCB(it.serial, radioResponseInfo, rspMsgPayload) }
 
     }
 

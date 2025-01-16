@@ -24,8 +24,6 @@ import android.telephony.ims.ImsCallProfile
 import android.util.Log
 import com.android.ims.ImsManager
 import vendor.huawei.hardware.radio.ims.V1_0.*
-import vendor.huawei.hardware.radio.ims.V1_0.IRadioImsResponse
-import vendor.huawei.hardware.radio.ims.V1_0.LastCallFailCauseInfo
 import java.util.*
 
 
@@ -67,24 +65,19 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         Log.i(LOG_TAG, "type=" + RespCode.getName(msgType))
         Log.i(LOG_TAG, "slotID=" + mSlotId)
 
-        /*switch (msgType) {
-            case PASS_1:
-            case PASS_2:
-            case PASS_3:
-                return;
-            case IMS_DIAL_RESPONSE:
-                imsDialResponse(radioResponseInfo);
-                break;
-            case SET_IMS_CALL_WAITING_RESPONSE:
-                setImsCallWaitingResponse(radioResponseInfo);
-                break;
-            case GET_LTE_INFO_RESPONSE:
-                getLteInfoResponse(radioResponseInfo);
-                break;
-            case ACCEPT_IMS_CALL_RESPONSE:
-                acceptImsCallResponse(radioResponseInfo);
+        //  C:\GitHub\iceows\ims_hi6250_volte\app\src\main\java\com\huawei\ims\ImsRadioResponse.java
+        when (msgType) {
 
-        }*/
+            RilConstS32.RIL_REQUEST_HW_IMS_DIAL ->  Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_DIAL")             /* 579 */
+            RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_SEND_USSD")    /* 588 */
+            RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_ANSWER")          /* 590 */
+            RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_GET_IMS_SWITCH")  /* 651 */
+            RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_SET_IMS_SWITCH")  /* 650 */
+            RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_REGISTER")      /* 686 */
+
+            else -> Log.w(LOG_TAG, "Unknown msg type :$msgType")
+        }
+
         // Huawei
         radioResponseInfo?.let { RilHolder.triggerImsCB(it.serial, radioResponseInfo, rspMsgPayload) }
 
@@ -97,6 +90,51 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
     override fun explicitCallTransferResponse(p0: RadioResponseInfo?) {
         TODO("Not yet implemented")
     }
+
+    private fun getCurrentImsCallsResponseV2(
+        responseInfo: RadioResponseInfo,
+        calls: ArrayList<RILImsCall>
+    ) {
+        Rlog.d(LOG_TAG, "getCurrentImsCallsResponse:responseInfo =$responseInfo")
+        responseCurrentImsCallsV2(responseInfo, calls)
+    }
+
+    private fun responseCurrentImsCallsV2(
+        responseInfo: RadioResponseInfo,
+        calls: ArrayList<RILImsCall>
+    ) {
+        /*
+        val rr: ImsRILRequest = this.mRil.processResponse(responseInfo)
+        if (rr != null) {
+            var ret: Any? = null
+            if (responseInfo.error === 0) {
+                val num = calls.size
+                val dcCalls: ArrayList<DriverImsCall> = ArrayList<DriverImsCall>(num)
+                for (i in 0 until num) {
+                    val dc = DriverImsCall(calls[i])
+                    if (!this.mRil.isSupportCnap()) {
+                        dc.namePresentation = 2
+                        this.mRil.logd("isSupportCnap : false")
+                    }
+                    dcCalls.add(dc)
+                    if (dc.isVoicePrivacy) {
+                        this.mRil.mVoicePrivacyOnRegistrants.notifyRegistrants()
+                        this.mRil.logd("InCall VoicePrivacy is enabled")
+                    } else {
+                        this.mRil.mVoicePrivacyOffRegistrants.notifyRegistrants()
+                        this.mRil.logd("InCall VoicePrivacy is disabled")
+                    }
+                }
+                Collections.sort(dcCalls)
+                ret = dcCalls
+                sendMessageResponse(rr.mResult, ret)
+            }
+            this.mRil.processResponseDone(rr, responseInfo, ret)
+        }
+        */
+
+    }
+
 
     override fun getCurrentImsCallsResponse(radioResponseInfo: RadioResponseInfo?, arrayList: ArrayList<RILImsCall>)
     {
@@ -149,7 +187,10 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
                 calls.add(call.index)
             }
             for ((_, value) in HwImsCallSession.calls) {
+                Rlog.d(LOG_TAG, "calls : " + value.rilImsCall)
                 if (!calls.contains(value.rilImsCall!!.index)) {
+                    Rlog.d(LOG_TAG, "notifying dead call " + redactCall(value.rilImsCall!!))
+
                     try {
                         Rlog.d(LOG_TAG, "notifying dead call " + redactCall(value.rilImsCall!!))
                         value.notifyEnded()
@@ -245,41 +286,17 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
     ) {
         TODO("Not yet implemented")
     }
-    /*
-    public static final int IMS_DIAL_RESPONSE = 0XDC;
-    public static final int SET_IMS_CALL_WAITING_RESPONSE = 0X100;
-    public static final int GET_LTE_INFO_RESPONSE = 0X136;
-    public static final int ACCEPT_IMS_CALL_RESPONSE = 0XE7;
-    public static final int SET_DMPCSCF_RESPONSE = 0X13C;
-    public static final int SET_DMDYN_RESPONSE = 0X13D;
-    public static final int SET_DMTIMER_RESPONSE = 0X13E;
-    public static final int SET_DMSMS_RESPONSE = 0X13F;
-    public static final int GET_DMPCSCF_RESPONSE = 0X140;
-    public static final int GET_DMTIMER_RESPONSE = 0X141;
-    public static final int GET_DMDYN_RESPONSE = 0X142;
-    public static final int GET_DMSMS_RESPONSE = 0X143;
-    public static final int GET_DMUSER_RESPONSE = 0X144;
-    public static final int WIFI_EMERGENCY_AID = 0X151;
-    public static final int SEND_BATTERY_STATUS_RESPONSE = 0X147;
-    public static final int MODIFY_IMS_CALL_INITIATE_RESPONSE = 0X113;
-    public static final int MODIFY_IMS_CALL_CONFIRM_RESPONSE = 0X114;
-    public static final int GET_IMS_IMPU_RESPONSE = 0XF6;
-    public static final int SET_IMS_VT_CAPABILITY_RESPONSE = 0X150;
-    public static final int IMS_LAST_CALL_FAIL_REASON_INFO_RESPONSE = 0X14F;
-    public static final int SWITCH_WAITING_OR_HOLDING_AND_ACTIVE_FOR_IMS_RESPONSE = 0X156;
-    public static final int PASS_1 = 0XE3;
-    public static final int PASS_2 = 0X35;
-    public static final int PASS_3 = 0X36;*/
-    /*
-    public static final int IMS_DEF1 = 0x124;
-	type=292 = 0x124
-    type=293 = 0x125
-	type=328 = 0x148
-    */
-
 
 
     enum class RespCode(var value: Int) {
+        /*
+        RilConstS32.RIL_REQUEST_HW_IMS_DIAL ->  Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_DIAL")            579 - 0x243
+        RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_SEND_USSD")   588
+        RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_ANSWER")         590
+        RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_GET_IMS_SWITCH") 651
+        RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_SET_IMS_SWITCH") 650
+        RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_REGISTER")     686
+        */
         IMS_DIAL_RESPONSE(0xdc), SET_IMS_CALL_WAITING_RESPONSE(0x100),
         GET_LTE_INFO_RESPONSE(0x136), ACCEPT_IMS_CALL_RESPONSE(0xe7),
         SET_DMPCSCF_RESPONSE(0x13c), SET_DMDYN_RESPONSE(0x13d),
