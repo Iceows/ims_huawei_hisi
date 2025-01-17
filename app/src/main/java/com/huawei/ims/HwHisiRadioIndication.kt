@@ -46,10 +46,15 @@ class HwHisiRadioIndication (private val mSlotId: Int) : IHisiRadioIndication.St
             RIL_UNSOL_HW_LIMIT_PDP_ACT_IND -> hisiLimitPDP(indicationType)
             RIL_UNSOL_HW_SIGNAL_STRENGTH -> hisiSignalStrength(indicationType)
             RIL_UNSOL_HW_RESTRAT_RILD_NV_MATCH -> hisiRestratRild(indicationType)
+            RIL_UNSOL_HW_NETWORK_REJECT_CASE  -> hisiRejectCase(indicationType)
 
             else -> Log.w(LOG_TAG, "Unknown msg type :$msgId")
         }
 
+    }
+
+    private fun hisiRejectCase(indicationType: Int) {
+        Rlog.d(LOG_TAG, "hisiRejectCase, indication type : " + indicationType)
     }
 
     private fun hisiPLMNSearchInfo(indicationType: Int) {
