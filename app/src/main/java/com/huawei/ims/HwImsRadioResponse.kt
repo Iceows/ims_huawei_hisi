@@ -68,12 +68,12 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         //  C:\GitHub\iceows\ims_hi6250_volte\app\src\main\java\com\huawei\ims\ImsRadioResponse.java
         when (msgType) {
 
-            RilConstS32.RIL_REQUEST_HW_IMS_DIAL ->  Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_DIAL")             /* 579 */
-            RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_SEND_USSD")    /* 588 */
-            RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_ANSWER")          /* 590 */
-            RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_GET_IMS_SWITCH")  /* 651 */
-            RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_SET_IMS_SWITCH")  /* 650 */
-            RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_REGISTER")      /* 686 */
+            RilConstS32.RIL_REQUEST_HW_IMS_DIAL ->  Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_DIAL")             /* 579 */
+            RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_SEND_USSD")    /* 588 */
+            RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_ANSWER")          /* 590 */
+            RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.i(LOG_TAG, "RIL_REQUEST_HW_GET_IMS_SWITCH")  /* 651 */
+            RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.i(LOG_TAG, "RIL_REQUEST_HW_SET_IMS_SWITCH")  /* 650 */
+            RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_REGISTER")      /* 686 */
 
             else -> Log.w(LOG_TAG, "Unknown msg type :$msgType")
         }
