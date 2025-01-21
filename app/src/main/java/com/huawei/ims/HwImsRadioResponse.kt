@@ -91,108 +91,74 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         TODO("Not yet implemented")
     }
 
-    private fun getCurrentImsCallsResponseV2(
-        responseInfo: RadioResponseInfo,
-        calls: ArrayList<RILImsCall>
-    ) {
-        Rlog.d(LOG_TAG, "getCurrentImsCallsResponse:responseInfo =$responseInfo")
-        responseCurrentImsCallsV2(responseInfo, calls)
-    }
 
-    private fun responseCurrentImsCallsV2(
-        responseInfo: RadioResponseInfo,
-        calls: ArrayList<RILImsCall>
-    ) {
-        /*
-        val rr: ImsRILRequest = this.mRil.processResponse(responseInfo)
-        if (rr != null) {
-            var ret: Any? = null
-            if (responseInfo.error === 0) {
-                val num = calls.size
-                val dcCalls: ArrayList<DriverImsCall> = ArrayList<DriverImsCall>(num)
-                for (i in 0 until num) {
-                    val dc = DriverImsCall(calls[i])
-                    if (!this.mRil.isSupportCnap()) {
-                        dc.namePresentation = 2
-                        this.mRil.logd("isSupportCnap : false")
-                    }
-                    dcCalls.add(dc)
-                    if (dc.isVoicePrivacy) {
-                        this.mRil.mVoicePrivacyOnRegistrants.notifyRegistrants()
-                        this.mRil.logd("InCall VoicePrivacy is enabled")
-                    } else {
-                        this.mRil.mVoicePrivacyOffRegistrants.notifyRegistrants()
-                        this.mRil.logd("InCall VoicePrivacy is disabled")
-                    }
-                }
-                Collections.sort(dcCalls)
-                ret = dcCalls
-                sendMessageResponse(rr.mResult, ret)
-            }
-            this.mRil.processResponseDone(rr, responseInfo, ret)
-        }
-        */
-
-    }
-
-
-    override fun getCurrentImsCallsResponse(radioResponseInfo: RadioResponseInfo?, arrayList: ArrayList<RILImsCall>)
+    // Huawei
+    override fun getCurrentImsCallsResponse(radioResponseInfo: RadioResponseInfo?, calls: ArrayList<RILImsCall>)
     {
-        // Huawei
         Log.i(LOG_TAG, "getCurrentImsCallsResponse on slotID " + mSlotId)
         synchronized(HwImsCallSession.sCallsLock) {
-            val calls = ArrayList<Int>(arrayList.size)
-            for (call in arrayList) {
-                Log.i(LOG_TAG, "calls list contains " + redactCall(call))
+            val num: Int = calls.size
+            val dcCalls = ArrayList<DriverImsCall>(num)
+
+            Log.i(LOG_TAG, "ArrayList size = " + num)
+
+            for (i in 0 until num) {
+                val dc = DriverImsCall(calls[i])
+
+                Log.i(LOG_TAG, "calls list contains " + redactCall(dc))
                 // RIL sometimes gives us the leading +, so first try with one, and if its null, try again without the +.
-                var session = HwImsCallSession.awaitingIdFromRIL["+" + call.number]
+                var session = HwImsCallSession.awaitingIdFromRIL["+" + dc.number]
                 if (session == null)
-                    session = HwImsCallSession.awaitingIdFromRIL[call.number]
+                    session = HwImsCallSession.awaitingIdFromRIL[dc.number]
                 if (session != null) {
                     Rlog.d(LOG_TAG, "giving call id from ril.")
-                    session.addIdFromRIL(call)
+                    session.addIdFromRIL(dc)
                 }
-                session = HwImsCallSession.calls[call.index]
+                session = HwImsCallSession.calls[dc.index]
                 if (session == null) {
-                    if (call.isMT > 0) {
-                        Log.d(LOG_TAG, "Notifying MmTelFeature incoming call! " + redactCall(call))
+                    if (dc.isMT ) {
+                        Log.d(LOG_TAG, "Notifying MmTelFeature incoming call! " + redactCall(dc))
                         // An incoming call that we have never seen before, tell the framework.
                     } else {
-                        Log.e(LOG_TAG, "Phantom Call!!!! " + redactCall(call))
-                        HwImsCallSession.calls.forEach { s, hwImsCallSession -> Rlog.d(LOG_TAG, "Phantom debugging got call in static calls " + redactCall(hwImsCallSession.rilImsCall!!) + " with number " + s) }
+                        Log.e(LOG_TAG, "Phantom Call!!!! " + redactCall(dc))
+                        HwImsCallSession.calls.forEach { s, hwImsCallSession -> Rlog.d(LOG_TAG, "Phantom debugging got call in static calls " + redactCall(hwImsCallSession.driverImsCall!!) + " with number " + s) }
                         HwImsCallSession.awaitingIdFromRIL.forEach { s, hwImsCallSession -> Rlog.d(LOG_TAG, "Phantom debugging got call in static awaiting " + hwImsCallSession.mCallee + " with number " + s) }
-                        // Someone has been talking to AT... naughty.
                     }
                     val extras = Bundle()
-                    val callSession = HwImsCallSession(mSlotId, ImsCallProfile(), call)
+                    val callSession = HwImsCallSession(mSlotId, ImsCallProfile(), dc)
                     extras.putInt(ImsManager.EXTRA_PHONE_ID, mSlotId)
                     extras.putString(ImsManager.EXTRA_CALL_ID, callSession.callId)
-                    extras.putBoolean(ImsManager.EXTRA_IS_UNKNOWN_CALL, call.isMT.toInt() == 0) // A new outgoing call should never happen. Someone is playing with AT commands or talking to the modem.
+                    extras.putBoolean(ImsManager.EXTRA_IS_UNKNOWN_CALL, dc.isMT) // A new outgoing call should never happen. Someone is playing with AT commands or talking to the modem.
                     Log.i(LOG_TAG, "createMmTelFeature" )
                     HwImsService.instance!!.createMmTelFeature(mSlotId)!!.notifyIncomingCall(callSession, extras)
                 } else {
                     // Existing call, update it's data.
-                    session.updateCall(call)
+                    session.updateCall(dc)
                 }
-                if (call.isMpty > 0 && call.state == 2) { // Dialing & Multiparty
+                if (dc.isMpty  && dc.state == DriverImsCall.State.DIALING) { // Dialing & Multiparty
                     // It is a new conference call being added.
                     for (confSession in HwImsCallSession.calls.values) {
                         if (confSession.isMultiparty) {
-                            Rlog.d(LOG_TAG, "adding call " + call.index + " to conference " + confSession.callId)
-                            confSession.notifyConfDone(call)
+                            Rlog.d(LOG_TAG, "adding call " + dc.index + " to conference " + confSession.callId)
+                            confSession.notifyConfDone(dc)
                             break
                         }
                     }
                 }
-                calls.add(call.index)
+                //calls.add(call.index)
+                dcCalls.add(dc)
             }
+            dcCalls.sort()
+
+
+            /*
             for ((_, value) in HwImsCallSession.calls) {
-                Rlog.d(LOG_TAG, "calls : " + value.rilImsCall)
-                if (!calls.contains(value.rilImsCall!!.index)) {
-                    Rlog.d(LOG_TAG, "notifying dead call " + redactCall(value.rilImsCall!!))
+                Rlog.d(LOG_TAG, "calls : " + value.driverImsCall)
+                if (!calls.contains(value.driverImsCall!!.index)) {
+                    Rlog.d(LOG_TAG, "notifying dead call " + redactCall(value.driverImsCall!!))
 
                     try {
-                        Rlog.d(LOG_TAG, "notifying dead call " + redactCall(value.rilImsCall!!))
+                        Rlog.d(LOG_TAG, "notifying dead call " + redactCall(value.driverImsCall!!))
                         value.notifyEnded()
                     } catch (e: RuntimeException) {
                         Rlog.e(LOG_TAG, "error notifying dead call!", e)
@@ -200,18 +166,23 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
 
                 }
             }
+
+             */
         }
     }
 
-    private fun redactCall(call: RILImsCall): String {
-        return "{.state = " + call.state + ", .index = " + call.index + ", .toa = " + call.toa + ", .isMpty = " + call.isMpty + ", .isMT = " + call.isMT + ", .als = " + call.als + ", .isVoice = " + call.isVoice + ", .isVoicePrivacy = " + call.isVoicePrivacy + ", .number = " + Rlog.pii(LOG_TAG, call.number) + ", .numberPresentation = " + call.numberPresentation + ", .name = " + Rlog.pii(LOG_TAG, call.name) + ", .namePresentation = " + call.namePresentation + ", .callDetails = " + call.callDetails.toString() + ", .isEConference = " + call.isECOnference + ", .peerVideoSupport = " + call.peerVideoSupport + "}"
+    private fun redactCall(call: DriverImsCall): String {
+        return "{.state = " + call.state + ", .index = " + call.index + ", .toa = " + call.TOA + ", .isMpty = " + call.isMpty + ", .isMT = " + call.isMT + ", .als = " + call.als + ", .isVoice = " + call.isVoice + ", .isVoicePrivacy = " + call.isVoicePrivacy + ", .number = " + Rlog.pii(LOG_TAG, call.number) + ", .numberPresentation = " + call.numberPresentation + ", .name = " + Rlog.pii(LOG_TAG, call.name) + ", .namePresentation = " + call.namePresentation + ", .callDetails = " + call.imsCallProfile.toString() +  ", .peerVideoSupport = " + call.peerVideoSupport + "}"
     }
+
+    // https://github.com/LineageOS/android_frameworks_opt_telephony/blob/lineage-16.0/src/java/com/android/internal/telephony/RadioResponse.java
     override fun getCurrentImsCallsResponseV1_2(
-        p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?,
-        p1: ArrayList<RILImsCallV1_2>?
+        radioResponseInfo: RadioResponseInfo?,
+        arrayList: ArrayList<RILImsCallV1_2>
     ) {
-        TODO("Not yet implemented")
-    }
+        // Huawei
+        Log.i(LOG_TAG, "getCurrentImsCallsResponse V1.2 on slotID " + mSlotId)
+     }
 
     override fun getCurrentImsCallsWithImsDomainResponse(
         p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?,
@@ -260,15 +231,16 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         TODO("Not yet implemented")
     }
 
-    override fun setImsRegErrReportResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+    // vendor.huawei.hardware.radio.ims.V1_0.IRadioImsResponse
+    override fun setImsRegErrReportResponse(responseInfo: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+        responseVoid(responseInfo)
+    }
+
+    override fun setMuteResponse(responseInfo: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
         TODO("Not yet implemented")
     }
 
-    override fun setMuteResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
-        TODO("Not yet implemented")
-    }
-
-    override fun startDtmfResponse(p0: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
+    override fun startDtmfResponse(responseInfo: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
         TODO("Not yet implemented")
     }
 
@@ -287,28 +259,26 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         TODO("Not yet implemented")
     }
 
+    private fun responseVoid(radioResponseInfo: RadioResponseInfo?) {
 
+        radioResponseInfo?.let { RilHolder.triggerImsCB(it.serial, radioResponseInfo,null) }
+
+    }
+
+
+    /*
+RilConstS32.RIL_REQUEST_HW_IMS_DIAL ->  Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_DIAL")            579 - 0x243
+RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_SEND_USSD")   588
+RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_ANSWER")         590
+RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_GET_IMS_SWITCH") 651
+RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_SET_IMS_SWITCH") 650
+RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_REGISTER")     686
+*/
     enum class RespCode(var value: Int) {
-        /*
-        RilConstS32.RIL_REQUEST_HW_IMS_DIAL ->  Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_DIAL")            579 - 0x243
-        RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_SEND_USSD")   588
-        RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_ANSWER")         590
-        RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_GET_IMS_SWITCH") 651
-        RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.w(LOG_TAG, "RIL_REQUEST_HW_SET_IMS_SWITCH") 650
-        RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.w(LOG_TAG, "RIL_REQUEST_HW_IMS_REGISTER")     686
-        */
-        IMS_DIAL_RESPONSE(0xdc), SET_IMS_CALL_WAITING_RESPONSE(0x100),
-        GET_LTE_INFO_RESPONSE(0x136), ACCEPT_IMS_CALL_RESPONSE(0xe7),
-        SET_DMPCSCF_RESPONSE(0x13c), SET_DMDYN_RESPONSE(0x13d),
-        SET_DMTIMER_RESPONSE(0x13e), SET_DMSMS_RESPONSE(0x13f),
-        GET_DMPCSCF_RESPONSE(0x140), GET_DMTIMER_RESPONSE(0x141),
-        GET_DMDYN_RESPONSE(0x142), GET_DMSMS_RESPONSE(0x143),
-        GET_DMUSER_RESPONSE(0x144), WIFI_EMERGENCY_AID(0x151),
-        SEND_BATTERY_STATUS_RESPONSE(0x147), MODIFY_IMS_CALL_INITIATE_RESPONSE(0x133),
-        MODIFY_IMS_CALL_CONFIRM_RESPONSE(0x114), GET_IMS_IMPU_RESPONSE(0xf6),
-        SET_IMS_VT_CAPABILITY_RESPONSE(0x150), IMS_LAST_CALL_FAIL_REASON_INFO_RESPONSE(0x14f),
-        SWITCH_WAITING_OR_HOLDING_AND_ACTIVE_FOR_IMS_RESPONSE(0x156),
-        PASS1(0xe3), PASS2(0x35), PASS3(0x36);
+
+        RIL_REQUEST_HW_IMS_DIAL(579),RIL_REQUEST_HW_IMS_SEND_USSD(588),
+        RIL_REQUEST_HW_IMS_ANSWER(590), RIL_REQUEST_HW_GET_IMS_SWITCH(650),
+        RIL_REQUEST_HW_SET_IMS_SWITCH(651), RIL_REQUEST_HW_IMS_REGISTER(686);
 
         companion object {
 

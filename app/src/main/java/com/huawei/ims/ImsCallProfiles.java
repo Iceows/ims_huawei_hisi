@@ -159,19 +159,72 @@ public class ImsCallProfiles {
         }
     }
 
-    /* JADX WARN: Code restructure failed: missing block: B:14:0x0058, code lost:
-        if (r0.contains(com.huawei.ims.ImsCallProfiles.EXTRA_KEY_SEARCH_NUMBER) != false) goto L17;
-     */
-    /*
-        Code decompiled incorrectly, please refer to instructions dump.
-        To view partially-correct code enable 'Show inconsistent code' option in preferences
-    */
+
     public java.lang.String toString() {
-        /*
-            Method dump skipped, instructions count: 681
-            To view this dump change 'Code comments level' option to 'DEBUG'
-        */
-        throw new UnsupportedOperationException("Method not decompiled: com.huawei.ims.ImsCallProfiles.toString():java.lang.String");
+            ImsServiceState[] imsServiceStateArr;
+            ImsServiceState.StatusForAccessTech[] statusForAccessTechArr;
+            ImsServiceState[] imsServiceStateArr2;
+            ImsServiceState.StatusForAccessTech[] statusForAccessTechArr2;
+            String[] strArr;
+            String extrasResult = NULL_STRING_VALUE;
+            String localSrvAbility = NULL_STRING_VALUE;
+            String peerSrvAbility = NULL_STRING_VALUE;
+            StringBuffer stringBuffer = new StringBuffer();
+
+            if (this.extras != null) {
+                for (String s : this.extras) {
+                    if (s != null) {
+                        if (s.contains(NUMBERMARKINFO_NUMBER) || s.contains(EXTRA_KEY_BACKUP_NUMBER) || s.contains(EXTRA_KEY_SEARCH_NUMBER)) {
+                            String before = s.substring(0, s.indexOf("=") + 1);
+                            String after = s.substring(s.indexOf("=") + 1, s.length());
+                            s = before + HiddenPrivacyInfo.putMosaic(after, 0);
+                        }
+                        stringBuffer.append(s);
+                    }
+                }
+                extrasResult = stringBuffer.toString();
+            }
+            if (this.localAbility != null) {
+                StringBuffer buf = new StringBuffer(NULL_STRING_VALUE);
+                for (ImsServiceState srv : this.localAbility) {
+                    if (srv != null) {
+                        buf.append("isValid = ");
+                        buf.append(srv.isValid);
+                        buf.append(" type = ");
+                        buf.append(srv.type);
+                        buf.append(" state = ");
+                        buf.append(srv.state);
+                        if (srv.accessTechStatus != null) {
+                            for (ImsServiceState.StatusForAccessTech at : srv.accessTechStatus) {
+                                buf.append(" accTechStatus ");
+                                buf.append(at);
+                            }
+                        }
+                    }
+                }
+                localSrvAbility = buf.toString();
+            }
+            if (this.peerAbility != null) {
+                StringBuffer buf2 = new StringBuffer(NULL_STRING_VALUE);
+                for (ImsServiceState srv2 : this.peerAbility) {
+                    if (srv2 != null) {
+                        buf2.append("isValid = ");
+                        buf2.append(srv2.isValid);
+                        buf2.append(" type = ");
+                        buf2.append(srv2.type);
+                        buf2.append(" state = ");
+                        buf2.append(srv2.state);
+                        if (srv2.accessTechStatus != null) {
+                            for (ImsServiceState.StatusForAccessTech at2 : srv2.accessTechStatus) {
+                                buf2.append(" accTechStatus ");
+                                buf2.append(at2);
+                            }
+                        }
+                    }
+                }
+                peerSrvAbility = buf2.toString();
+            }
+            return " " + this.call_type + " " + this.call_domain + " " + extrasResult + " callSubState " + this.callsubstate + " videoPauseState" + this.mVideoPauseState + " mediaId" + this.callMediaId + " Local Ability " + localSrvAbility + " Peer Ability " + peerSrvAbility;
     }
 
     public boolean update(ImsCallProfiles imsCallProfiles) {

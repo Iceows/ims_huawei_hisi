@@ -9,7 +9,7 @@ import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallEx;
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallV1_2;
 
 public class DriverImsCall extends DriverCall {
-    static final String LOG_TAG = "DRIVERCALL-IMS";
+    static final String LOG_TAG = "DriverImsCall";
     public static final String SEPARATOR_TAG = ",";
     public ImsReasonInfo callFailCause;
     public ImsCallProfiles imsCallProfile;
