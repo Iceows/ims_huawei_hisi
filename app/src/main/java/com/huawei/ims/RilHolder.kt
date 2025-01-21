@@ -20,16 +20,19 @@ package com.huawei.ims
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.*
+import android.os.Handler
+import android.os.IHwBinder
+import android.os.Looper
+import android.os.Message
 import android.os.RemoteException
 import android.util.Log
+import com.android.internal.telephony.RILRequest
 import vendor.huawei.hardware.hisiradio.V1_0.IHisiRadio
-
 import vendor.huawei.hardware.radio.V2_0.IRadio
 import vendor.huawei.hardware.radio.ims.V1_0.IRadioIms
-
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
+
 
 /*
 phhgsi_arm64_ab:/ # lshal |grep radio
@@ -46,6 +49,10 @@ Y vendor.huawei.hardware.radio@2.0::IRadio/slot1                               0
 object RilHolder {
 
     private const val LOG_TAG = "HwImsRilHolder"
+
+    val mRadioProxyCookie: AtomicLong? = AtomicLong(0L)
+    val mRadioProxyDeathRecipient: RadioProxyDeathRecipient? = RadioProxyDeathRecipient()
+
 
     // Radio Hisi - hal vendor.huawei.hardware.hisiradio@1.1::IHisiRadio
     private val serviceHisiNames =  arrayOf("slot1", "slot2", "slot3")
@@ -72,6 +79,11 @@ object RilHolder {
     private val serialToSlot = ConcurrentHashMap<Int, Int>()
     private val blocks = ConcurrentHashMap<Int, BlockingCallback>()
 
+
+    init {
+        Log.i(LOG_TAG,"Init")
+
+    }
 
     fun getRadio(slotId: Int): IRadio? {
         if (radioImpls[slotId] == null) {
@@ -192,8 +204,7 @@ object RilHolder {
             }
         }
         try {
-            //getNextSerial
-           // radioImpls[slotId]!!.linkToDeath(this.mRadioProxyDeathRecipient, this.mRadioProxyCookie.incrementAndGet());
+            this.mRadioProxyCookie?.let { radioImsImpls[slotId]!!.linkToDeath(this.mRadioProxyDeathRecipient, it.incrementAndGet()) };
             radioImsImpls[slotId]!!.setResponseFunctionsHuawei(responseImsCallbacks[slotId], indicationImsCallbacks[slotId])
         } catch (e: RemoteException) {
             Log.e(LOG_TAG, "Failed to update response functions!, Err : " + e.printStackTrace())
@@ -292,4 +303,14 @@ object RilHolder {
 
     }
 
+
+    class RadioProxyDeathRecipient internal constructor() : IHwBinder.DeathRecipient {
+        // android.os.IHwBinder.DeathRecipient
+        override fun serviceDied(cookie: Long) {
+            Log.w(LOG_TAG,"Service IMS is dead...")
+
+        }
+    }
 }
+
+
