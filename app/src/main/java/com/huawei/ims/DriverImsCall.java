@@ -8,7 +8,6 @@ import vendor.huawei.hardware.radio.ims.V1_0.RILImsCall;
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallEx;
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallV1_2;
 
-/* loaded from: DriverImsCall.class */
 public class DriverImsCall extends DriverCall {
     static final String LOG_TAG = "DRIVERCALL-IMS";
     public static final String SEPARATOR_TAG = ",";
@@ -21,7 +20,6 @@ public class DriverImsCall extends DriverCall {
     public int redirectNumberToa;
     public State state;
 
-    /* loaded from: DriverImsCall$State.class */
     public enum State {
         ACTIVE,
         HOLDING,
@@ -143,100 +141,37 @@ public class DriverImsCall extends DriverCall {
         }
     }
 
-    /* JADX WARN: Code restructure failed: missing block: B:15:0x0050, code lost:
-        if (r3.number.equals(r4.number) == false) goto L11;
-     */
-    /* JADX WARN: Removed duplicated region for block: B:19:0x0068  */
-    /* JADX WARN: Removed duplicated region for block: B:22:0x007d  */
-    /*
-        Code decompiled incorrectly, please refer to instructions dump.
-        To view partially-correct code enable 'Show inconsistent code' option in preferences
-    */
-    private boolean isChanged(com.huawei.ims.DriverImsCall r4) {
-        /*
-            r3 = this;
-            r0 = 0
-            r5 = r0
-            r0 = r3
-            com.huawei.ims.DriverImsCall$State r0 = r0.state
-            r1 = r4
-            com.huawei.ims.DriverImsCall$State r1 = r1.state
-            if (r0 == r1) goto L17
-            r0 = r3
-            r1 = r4
-            com.huawei.ims.DriverImsCall$State r1 = r1.state
-            r0.state = r1
-            r0 = 1
-            r5 = r0
-        L17:
-            r0 = r3
-            int r0 = r0.index
-            r1 = r4
-            int r1 = r1.index
-            if (r0 == r1) goto L2c
-            r0 = r3
-            r1 = r4
-            int r1 = r1.index
-            r0.index = r1
-            r0 = 1
-            r5 = r0
-        L2c:
-            r0 = r3
-            java.lang.String r0 = r0.number
-            if (r0 != 0) goto L3a
-            r0 = r4
-            java.lang.String r0 = r0.number
-            if (r0 != 0) goto L53
-        L3a:
-            r0 = r5
-            r6 = r0
-            r0 = r3
-            java.lang.String r0 = r0.number
-            if (r0 == 0) goto L5d
-            r0 = r5
-            r6 = r0
-            r0 = r3
-            java.lang.String r0 = r0.number
-            r1 = r4
-            java.lang.String r1 = r1.number
-            boolean r0 = r0.equals(r1)
-            if (r0 != 0) goto L5d
-        L53:
-            r0 = r3
-            r1 = r4
-            java.lang.String r1 = r1.number
-            r0.number = r1
-            r0 = 1
-            r6 = r0
-        L5d:
-            r0 = r3
-            boolean r0 = r0.isMT
-            r1 = r4
-            boolean r1 = r1.isMT
-            if (r0 == r1) goto L72
-            r0 = r3
-            r1 = r4
-            boolean r1 = r1.isMT
-            r0.isMT = r1
-            r0 = 1
-            r6 = r0
-        L72:
-            r0 = r3
-            boolean r0 = r0.isMpty
-            r1 = r4
-            boolean r1 = r1.isMpty
-            if (r0 == r1) goto L87
-            r0 = r3
-            r1 = r4
-            boolean r1 = r1.isMpty
-            r0.isMpty = r1
-            r0 = 1
-            r6 = r0
-        L87:
-            r0 = r6
-            return r0
-        */
-        throw new UnsupportedOperationException("Method not decompiled: com.huawei.ims.DriverImsCall.isChanged(com.huawei.ims.DriverImsCall):boolean");
+    private boolean isChanged(DriverImsCall update) {
+        boolean hasChanged = false;
+        State state = this.state;
+        State state2 = update.state;
+        if (state != state2) {
+            this.state = state2;
+            hasChanged = true;
+        }
+        if (this.index != update.index) {
+            this.index = update.index;
+            hasChanged = true;
+        }
+        if ((this.number == null && update.number != null) || (this.number != null && !this.number.equals(update.number))) {
+            this.number = update.number;
+            hasChanged = true;
+        }
+        if (this.isMT != update.isMT) {
+            this.isMT = update.isMT;
+            hasChanged = true;
+        }
+        if (this.isMpty != update.isMpty) {
+            this.isMpty = update.isMpty;
+            hasChanged = true;
+        }
+        int i = this.radioTechFromRilImsCall;
+        int i2 = update.radioTechFromRilImsCall;
+        if (i != i2) {
+            this.radioTechFromRilImsCall = i2;
+            return true;
+        }
+        return hasChanged;
     }
 
     public static State stateFromCall(int i) throws ATParseEx {
