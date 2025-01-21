@@ -30,8 +30,6 @@ import android.telephony.ims.ImsStreamMediaProfile
 import android.telephony.ims.stub.ImsCallSessionImplBase
 import android.util.Log
 import com.android.ims.ImsConfig
-import com.android.internal.telephony.DriverCall
-import vendor.huawei.hardware.radio.ims.V1_0.RILImsCall
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallDomain
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallType
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallV1_2
@@ -196,17 +194,15 @@ class HwImsCallSession
         mProfile.setCallExtraInt("remote_vt_capability", dc.peerVideoSupport)
 
         // Normallement dans DriverImsCall
-        val ratTypeFromModem = radioTechFromRilImsCall
+        val ratTypeFromModem = dc.radioTechFromRilImsCall
         if (ratTypeFromModem != -1) {
-            mProfile.setCallExtra(
-                "CallRadioTech",
-                getRadioTechFromDriverCall(ratTypeFromModem)
-            )
+            mProfile.setCallExtra("CallRadioTech", getRadioTechFromDriverCall(ratTypeFromModem))
         } else {
             //val hwTelephonyManager: HwTelephonyManager = HwTelephonyManager.getDefault()
             //if (hwTelephonyManager != null) {
                 //val default4GSlotId: Int = hwTelephonyManager.getDefault4GSlotId()
                 //val imsRegDomain: Int = hwTelephonyManager.getImsDomain(default4GSlotId)
+            //}
             val imsRegDomain=0;
             mProfile.setCallExtra(
                 "CallRadioTech",
@@ -216,7 +212,6 @@ class HwImsCallSession
 
         redirectNumberToa = redirectNumberToa
         redirectNumber = PhoneNumberUtils.stringFromStringAndTOA(redirectNumber, redirectNumberToa)
-        redirectNumberPresentation = DriverCall.presentationFromCLIP(redirectNumberPresentation)
 
         mProfile.setCallExtra("redirect_number", redirectNumber)
         mProfile.setCallExtraInt(
@@ -225,7 +220,6 @@ class HwImsCallSession
         )
 
 
-        /*
         val i = dc.imsCallProfile.call_type
         if (i == 10) {
             mProfile.mCallType = 1
@@ -265,7 +259,6 @@ class HwImsCallSession
             else -> return
         }
 
-         */
     }
 
     private fun getRadioTechFromDriverCall(imsDomain: Int): String? {
