@@ -23,6 +23,7 @@ import vendor.huawei.hardware.radio.V2_0.IccIoResultEx
 import vendor.huawei.hardware.radio.V2_0.RILPreferredPLMNSelector
 import vendor.huawei.hardware.radio.V2_0.RadioResponseInfo
 import vendor.huawei.hardware.radio.V2_0.RspMsgPayload
+import java.util.Arrays
 
 
 class HwRadioResponse internal constructor(private val mSlotId: Int) : IRadioResponse.Stub() {
@@ -36,6 +37,7 @@ class HwRadioResponse internal constructor(private val mSlotId: Int) : IRadioRes
 
         Log.i(LOG_TAG, "rspmsg radioresponseinfo = $radioResponseInfo,msgtype=$msgType")
         Log.i(LOG_TAG, "serial " + radioResponseInfo)
+        Log.i(LOG_TAG, "type=" + RespCode.getName(msgType))
         Log.i(LOG_TAG, "slotID=" + mSlotId)
 
         // Huawei
@@ -58,5 +60,23 @@ class HwRadioResponse internal constructor(private val mSlotId: Int) : IRadioRes
         TODO("Not yet implemented")
     }
 
+    enum class RespCode(var value: Int) {
 
+        RIL_REQUEST_HW_IMS_DIAL(579),RIL_REQUEST_HW_IMS_SEND_USSD(588),
+        RIL_REQUEST_HW_IMS_ANSWER(590), RIL_REQUEST_HW_GET_IMS_SWITCH(650),
+        RIL_REQUEST_HW_SET_IMS_SWITCH(651), RIL_REQUEST_HW_IMS_REGISTER(686);
+
+        companion object {
+
+            fun getName(code: Int): String {
+                val x = Arrays.stream(HwImsRadioResponse.RespCode.values())
+                    .filter { resp_code -> resp_code.value == code }.findAny()
+                return if (x.isPresent) {
+                    x.get().name
+                } else {
+                    Integer.toString(code)
+                }
+            }
+        }
+    }
 }
