@@ -1,29 +1,154 @@
+/*
+ * This file is part of HwIms
+ * Copyright (C) 2025 Penn Mackintosh and Raphael Mounier
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
+      ImsCallProfiles class was not part of android repos before Android 9 version (los16)
+      I found it in the huawei ims but especially also in the msm8996 ims
+      https://github.com/bcyj/android_tools_leeco_msm8996/blob/master/telephony-apps/ims/src/org/codeaurora/ims/CallDetails.java
+      https://github.com/SivanLiu/HwFrameWorkSource/blob/master/Mate20_9_0_0/src/main/java/android/telephony/ims/ImsCallProfile.java
+      https://github.com/LineageOS/android_frameworks_base/blob/lineage-16.0/telephony/java/android/telephony/ims/ImsCallProfile.java
+
+      It seems that this is part of a set of classes published by codeaurora
+
+      This classe use ImsServiceState
+ */
+
 package com.huawei.ims;
 
 import java.util.Arrays;
 import java.util.Map;
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallDetails;
 
-/* loaded from: ImsCallProfiles.class */
+
+
 public class ImsCallProfiles {
-    public static final int CALL_DOMAIN_AUTOMATIC = 3;
-    public static final int CALL_DOMAIN_CS = 1;
-    public static final int CALL_DOMAIN_NOT_SET = 4;
-    public static final int CALL_DOMAIN_PS = 2;
-    public static final int CALL_DOMAIN_UNKNOWN = 11;
-    public static final int CALL_RESTRICT_CAUSE_DISABLED = 2;
-    public static final int CALL_RESTRICT_CAUSE_NONE = 0;
-    public static final int CALL_RESTRICT_CAUSE_RAT = 1;
-    public static final int CALL_TYPE_SMS = 5;
-    public static final int CALL_TYPE_UNKNOWN = 10;
-    public static final int CALL_TYPE_VOICE = 0;
-    public static final int CALL_TYPE_VT = 3;
-    public static final int CALL_TYPE_VT_NODIR = 4;
-    public static final int CALL_TYPE_VT_PAUSE = 6;
-    public static final int CALL_TYPE_VT_RESUME = 7;
-    public static final int CALL_TYPE_VT_RX = 2;
-    public static final int CALL_TYPE_VT_TX = 1;
-    public static final int CALL_TYPE_VT_UPGRADE_CANCEL = 8;
+
+    /*
+     * Type of the call based on the media type and the direction of the media.
+     */
+
+    public static final int CALL_DOMAIN_UNKNOWN = 11; /*
+     * Phone.CALL_DOMAIN_UNKNOWN
+     * ; Unknown domain. Sent
+     * by RIL when modem has
+     * not yet selected a
+     * domain for a call
+     */
+
+    public static final int CALL_DOMAIN_CS = 1; /*
+     * Phone.CALL_DOMAIN_CS; Circuit
+     * switched domain
+     */
+    public static final int CALL_DOMAIN_PS = 2; /*
+     * Phone.CALL_DOMAIN_PS; Packet
+     * switched domain
+     */
+    public static final int CALL_DOMAIN_AUTOMATIC = 3; /*
+     * Phone.
+     * CALL_DOMAIN_AUTOMATIC;
+     * Automatic domain. Sent
+     * by Android to indicate
+     * that the domain for a
+     * new call should be
+     * selected by modem
+     */
+    public static final int CALL_DOMAIN_NOT_SET = 4; /*
+     * Phone.CALL_DOMAIN_NOT_SET
+     * ; Init value used
+     * internally by telephony
+     * until domain is set
+     */
+
+    public static final int CALL_RESTRICT_CAUSE_NONE = 0; /*
+     * Default cause, not
+     * restricted
+     */
+    public static final int CALL_RESTRICT_CAUSE_RAT = 1; /*
+     * Service not
+     * supported by RAT
+     */
+    public static final int CALL_RESTRICT_CAUSE_DISABLED = 2; /*
+     * Service
+     * disabled
+     */
+
+    public static final int CALL_TYPE_VOICE = 0; /*
+     * Phone.CALL_TYPE_VOICE /*
+     * Voice call-audio in both
+     * directions
+     */
+
+    public static final int CALL_TYPE_VT_TX = 1; /*
+     * Phone.CALL_TYPE_VT_TX; PS
+     * Video telephony call: one
+     * way TX video, two way audio
+     */
+
+    public static final int CALL_TYPE_VT_RX = 2; /*
+     * Phone.CALL_TYPE_VT_RX Video
+     * telephony call: one way RX
+     * video, two way audio
+     */
+
+    public static final int CALL_TYPE_VT = 3; /*
+     * Phone.CALL_TYPE_VT; Video
+     * telephony call: two way video,
+     * two way audio
+     */
+
+    public static final int CALL_TYPE_VT_NODIR = 4; /*
+     * Phone.CALL_TYPE_VT_NODIR;
+     * Video telephony call: no
+     * direction, two way audio,
+     * intermediate state in a
+     * video call till video
+     * link is setup
+     */
+
+    public static final int CALL_TYPE_SMS = 5; /*
+     * Phone.CALL_TYPE_SMS;SMS Type
+     */
+
+    public static final int CALL_TYPE_VT_PAUSE = 6; /*
+     * Indicates that video is paused;
+     * This is an internal call type.
+     * The type is used by TeleService and
+     * InCallUI only. See CALL_TYPE_VT_RESUME
+     */
+
+    public static final int CALL_TYPE_VT_RESUME = 7; /*
+     * This is an internal call
+     * type. VT_RESUME call
+     * type is used to send
+     * unpause request to
+     * TeleService.
+     */
+
+    public static final int CALL_TYPE_UNKNOWN = 10; /*
+     * Phone.CALL_TYPE_UNKNOWN;
+     * Unknown Call type, may be
+     * used for answering call
+     * with same call type as
+     * incoming call. This is
+     * only for telephony, not
+     * meant to be passed to RIL
+     */
+
+
     public static final String EXTRAS_CODEC = "Codec";
     public static final String EXTRAS_HANDOVER_INFORMATION = "handoverInfo";
     public static final String EXTRAS_IS_CONFERENCE_URI = "isConferenceUri";
@@ -36,37 +161,33 @@ public class ImsCallProfiles {
     public static final int VIDEO_PAUSE_STATE_PAUSED = 1;
     public static final int VIDEO_PAUSE_STATE_RESUMED = 2;
     public static final String NULL_STRING_VALUE = "";
-    public int callMediaId;
-    public int call_domain;
+
+
     public int call_type;
-    public int callsubstate;
+    public int call_domain;
+    public int callsubstate = 0;
+    public int callMediaId = MEDIA_ID_UNKNOWN;
     public String[] extras;
+    private int mVideoPauseState = VIDEO_PAUSE_STATE_RESUMED;
+
     public ImsServiceState[] localAbility;
-    private int mVideoPauseState;
     public ImsServiceState[] peerAbility;
 
+
     public ImsCallProfiles() {
-        this.callsubstate = 0;
-        this.callMediaId = -1;
-        this.mVideoPauseState = 2;
-        this.call_type = 10;
-        this.call_domain = 4;
+        this.call_type = CALL_TYPE_UNKNOWN;
+        this.call_domain = CALL_DOMAIN_NOT_SET;
         this.extras = null;
     }
 
-    public ImsCallProfiles(int i, int i2, String[] strArr) {
-        this.callsubstate = 0;
-        this.callMediaId = -1;
-        this.mVideoPauseState = 2;
-        this.call_type = i;
-        this.call_domain = i2;
-        this.extras = strArr;
+    public ImsCallProfiles(int callType, int callDomain, String[] extraparams) {
+        call_type = callType;
+        call_domain = callDomain;
+        extras = extraparams;
     }
 
+
     public ImsCallProfiles(ImsCallProfiles imsCallProfiles) {
-        this.callsubstate = 0;
-        this.callMediaId = -1;
-        this.mVideoPauseState = 2;
         if (imsCallProfiles != null) {
             this.call_type = imsCallProfiles.call_type;
             this.call_domain = imsCallProfiles.call_domain;
@@ -79,9 +200,6 @@ public class ImsCallProfiles {
     }
 
     public ImsCallProfiles(RILImsCallDetails rILImsCallDetails) {
-        this.callsubstate = 0;
-        this.callMediaId = -1;
-        this.mVideoPauseState = 2;
         if (rILImsCallDetails != null) {
             this.call_type = rILImsCallDetails.callType;
             this.call_domain = rILImsCallDetails.callDomain;
@@ -122,9 +240,13 @@ public class ImsCallProfiles {
         return this.mVideoPauseState;
     }
 
+    /**
+     * Convenience method, returns true if media id is valid, false otherwise.
+     */
     public boolean hasMediaIdValid() {
-        return this.callMediaId != -1 && this.callMediaId >= 0;
+        return callMediaId != MEDIA_ID_UNKNOWN && callMediaId >= 0;
     }
+
 
     public void setExtras(String[] strArr) {
         this.extras = strArr;
@@ -148,83 +270,92 @@ public class ImsCallProfiles {
         return strArr;
     }
 
-    public void setVideoPauseState(int i) {
-        switch (i) {
-            case 1:
-            case 2:
-                this.mVideoPauseState = i;
-                return;
-            default:
-                return;
+    public void setVideoPauseState(int videoPauseState) {
+        switch (videoPauseState) {
+            case VIDEO_PAUSE_STATE_RESUMED:
+            case VIDEO_PAUSE_STATE_PAUSED:
+                mVideoPauseState = videoPauseState;
         }
     }
 
+    /**
+     * @return string representation.
+     */
+    @Override
+    public String toString() {
+        ImsServiceState[] imsServiceStateArr;
+        ImsServiceState.StatusForAccessTech[] statusForAccessTechArr;
+        ImsServiceState[] imsServiceStateArr2;
+        ImsServiceState.StatusForAccessTech[] statusForAccessTechArr2;
+        String[] strArr;
+        String extrasResult = NULL_STRING_VALUE;
+        String localSrvAbility = NULL_STRING_VALUE;
+        String peerSrvAbility = NULL_STRING_VALUE;
+        StringBuffer stringBuffer = new StringBuffer();
 
-    public java.lang.String toString() {
-            ImsServiceState[] imsServiceStateArr;
-            ImsServiceState.StatusForAccessTech[] statusForAccessTechArr;
-            ImsServiceState[] imsServiceStateArr2;
-            ImsServiceState.StatusForAccessTech[] statusForAccessTechArr2;
-            String[] strArr;
-            String extrasResult = NULL_STRING_VALUE;
-            String localSrvAbility = NULL_STRING_VALUE;
-            String peerSrvAbility = NULL_STRING_VALUE;
-            StringBuffer stringBuffer = new StringBuffer();
-
-            if (this.extras != null) {
-                for (String s : this.extras) {
-                    if (s != null) {
-                        if (s.contains(NUMBERMARKINFO_NUMBER) || s.contains(EXTRA_KEY_BACKUP_NUMBER) || s.contains(EXTRA_KEY_SEARCH_NUMBER)) {
-                            String before = s.substring(0, s.indexOf("=") + 1);
-                            String after = s.substring(s.indexOf("=") + 1, s.length());
-                            s = before + HiddenPrivacyInfo.putMosaic(after, 0);
-                        }
-                        stringBuffer.append(s);
+        if (this.extras != null) {
+            for (String s : this.extras) {
+                if (s != null) {
+                    if (s.contains(NUMBERMARKINFO_NUMBER) || s.contains(EXTRA_KEY_BACKUP_NUMBER) || s.contains(EXTRA_KEY_SEARCH_NUMBER)) {
+                        String before = s.substring(0, s.indexOf("=") + 1);
+                        String after = s.substring(s.indexOf("=") + 1, s.length());
+                        s = before + HiddenPrivacyInfo.putMosaic(after, 0);
                     }
+                    stringBuffer.append(s);
                 }
-                extrasResult = stringBuffer.toString();
             }
-            if (this.localAbility != null) {
-                StringBuffer buf = new StringBuffer(NULL_STRING_VALUE);
-                for (ImsServiceState srv : this.localAbility) {
-                    if (srv != null) {
-                        buf.append("isValid = ");
-                        buf.append(srv.isValid);
-                        buf.append(" type = ");
-                        buf.append(srv.type);
-                        buf.append(" state = ");
-                        buf.append(srv.state);
-                        if (srv.accessTechStatus != null) {
-                            for (ImsServiceState.StatusForAccessTech at : srv.accessTechStatus) {
-                                buf.append(" accTechStatus ");
-                                buf.append(at);
-                            }
+            extrasResult = stringBuffer.toString();
+        }
+        if (this.localAbility != null) {
+            StringBuffer buf = new StringBuffer(NULL_STRING_VALUE);
+            for (ImsServiceState srv : this.localAbility) {
+                if (srv != null) {
+                    buf.append("isValid = ");
+                    buf.append(srv.isValid);
+                    buf.append(" type = ");
+                    buf.append(srv.type);
+                    buf.append(" state = ");
+                    buf.append(srv.state);
+                    if (srv.accessTechStatus != null) {
+                        for (ImsServiceState.StatusForAccessTech at : srv.accessTechStatus) {
+                            buf.append(" accTechStatus ");
+                            buf.append(at);
                         }
                     }
                 }
-                localSrvAbility = buf.toString();
             }
-            if (this.peerAbility != null) {
-                StringBuffer buf2 = new StringBuffer(NULL_STRING_VALUE);
-                for (ImsServiceState srv2 : this.peerAbility) {
-                    if (srv2 != null) {
-                        buf2.append("isValid = ");
-                        buf2.append(srv2.isValid);
-                        buf2.append(" type = ");
-                        buf2.append(srv2.type);
-                        buf2.append(" state = ");
-                        buf2.append(srv2.state);
-                        if (srv2.accessTechStatus != null) {
-                            for (ImsServiceState.StatusForAccessTech at2 : srv2.accessTechStatus) {
-                                buf2.append(" accTechStatus ");
-                                buf2.append(at2);
-                            }
+            localSrvAbility = buf.toString();
+        }
+        if (this.peerAbility != null) {
+            StringBuffer buf2 = new StringBuffer(NULL_STRING_VALUE);
+            for (ImsServiceState srv2 : this.peerAbility) {
+                if (srv2 != null) {
+                    buf2.append("isValid = ");
+                    buf2.append(srv2.isValid);
+                    buf2.append(" type = ");
+                    buf2.append(srv2.type);
+                    buf2.append(" state = ");
+                    buf2.append(srv2.state);
+                    if (srv2.accessTechStatus != null) {
+                        for (ImsServiceState.StatusForAccessTech at2 : srv2.accessTechStatus) {
+                            buf2.append(" accTechStatus ");
+                            buf2.append(at2);
                         }
                     }
                 }
-                peerSrvAbility = buf2.toString();
             }
-            return " " + this.call_type + " " + this.call_domain + " " + extrasResult + " callSubState " + this.callsubstate + " videoPauseState" + this.mVideoPauseState + " mediaId" + this.callMediaId + " Local Ability " + localSrvAbility + " Peer Ability " + peerSrvAbility;
+            peerSrvAbility = buf2.toString();
+        }
+        return " " + this.call_type
+                + " " + this.call_domain
+                + " " + extrasResult
+                + " callSubState "
+                + this.callsubstate
+                + " videoPauseState"
+                + this.mVideoPauseState
+                + " mediaId" + this.callMediaId
+                + " Local Ability " + localSrvAbility
+                + " Peer Ability " + peerSrvAbility;
     }
 
     public boolean update(ImsCallProfiles imsCallProfiles) {
