@@ -29,18 +29,22 @@ import android.os.Parcel;
 
 
 public class ImsServiceState {
-    public static final int CALL_TYPE_CS_VS_RX = 6;
-    public static final int CALL_TYPE_CS_VS_TX = 5;
-    public static final int CALL_TYPE_PS_VS_RX = 8;
-    public static final int CALL_TYPE_PS_VS_TX = 7;
-    public static final int CALL_TYPE_SMS = 10;
-    public static final int CALL_TYPE_UNKNOWN = 9;
-    public static final int CALL_TYPE_UT = 11;
+
+
     public static final int CALL_TYPE_VOICE = 0;
+
+    public static final int CALL_TYPE_VT_TX = 1;
+    public static final int CALL_TYPE_VT_RX = 2;
     public static final int CALL_TYPE_VT = 3;
     public static final int CALL_TYPE_VT_NODIR = 4;
-    public static final int CALL_TYPE_VT_RX = 2;
-    public static final int CALL_TYPE_VT_TX = 1;
+    public static final int CALL_TYPE_CS_VS_TX = 5;
+    public static final int CALL_TYPE_CS_VS_RX = 6;
+    public static final int CALL_TYPE_PS_VS_TX = 7;
+    public static final int CALL_TYPE_PS_VS_RX = 8;
+    public static final int CALL_TYPE_UNKNOWN = 9;
+    public static final int CALL_TYPE_SMS = 10;
+    public static final int CALL_TYPE_UT = 11;
+
     public static final int RADIO_TECH_1xRTT = 6;
     public static final int RADIO_TECH_ANY = -1;
     public static final int RADIO_TECH_EDGE = 2;
