@@ -18,6 +18,7 @@
 package com.huawei.ims
 
 import android.annotation.SuppressLint
+import android.os.Bundle
 import android.os.Message
 import android.os.RemoteException
 import android.telephony.PhoneNumberUtils
@@ -32,7 +33,6 @@ import android.util.Log
 import com.android.ims.ImsConfig
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallDomain
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallType
-import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallV1_2
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsDial
 import java.util.concurrent.ConcurrentHashMap
 
@@ -42,6 +42,7 @@ class HwImsCallSession
     private val mProfile: ImsCallProfile
     private val mLocalProfile: ImsCallProfile
     private val mRemoteProfile: ImsCallProfile
+
     private var listener: ImsCallSessionListener? = null
 
     var driverImsCall: DriverImsCall? = null
@@ -61,6 +62,8 @@ class HwImsCallSession
 
     init {
         this.mCount = sCount++
+
+
         this.mProfile = ImsCallProfile(SERVICE_TYPE_NORMAL, profile.callType)
         this.mLocalProfile = ImsCallProfile(SERVICE_TYPE_NORMAL, profile.callType)
         this.mRemoteProfile = ImsCallProfile(SERVICE_TYPE_NORMAL, profile.callType)
@@ -104,12 +107,6 @@ class HwImsCallSession
         }
     }
 
-
-    fun updateCallV1_2(call: RILImsCallV1_2) {
-        val lastState = mState
-
-        Log.e(tag, "ERROR must be implement function updateCallV1_2")
-    }
 
     @SuppressLint("MissingPermission")
     fun updateCall(call: DriverImsCall) {
@@ -175,10 +172,10 @@ class HwImsCallSession
     private fun extractImsCallProfileIntoCallProfile(dcUpdate: DriverImsCall)
     {
         if (dcUpdate == null) {
-            Rlog.e(tag, "Null dcUpdate in extractImsCallProfileIntoCallProfile");
-            return;
+            Rlog.e(tag, "Null dcUpdate in extractImsCallProfileIntoCallProfile")
+            return
         }
-        updateImsCallProfile(dcUpdate);
+        updateImsCallProfile(dcUpdate)
     }
     private fun updateImsCallProfile(dc: DriverImsCall) {
         Rlog.d(tag, "enter in updateImsCallProfile")
@@ -219,44 +216,37 @@ class HwImsCallSession
             presentationToOIR(redirectNumberPresentation)
         )
 
-
-        val i = dc.imsCallProfile.call_type
-        if (i == 10) {
-            mProfile.mCallType = 1
-            mProfile.mMediaProfile.mVideoDirection = -1
-            return
-        }
-        when (i) {
-            0 -> {
-                mProfile.mCallType = 2
-                mProfile.mMediaProfile.mVideoDirection = -1
-                return
+        // Translate Huawei IMS call type
+        when (dc.imsCallProfiles.call_type) {
+            HwImsCallDetails.CALL_TYPE_UNKNOWN -> {
+                mProfile.mCallType = CALL_TYPE_VOICE_N_VIDEO
+                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_INVALID
             }
 
-            1 -> {
-                mProfile.mCallType = 5
-                mProfile.mMediaProfile.mVideoDirection = 2
-                return
+            HwImsCallDetails.CALL_TYPE_VOICE -> {
+                mProfile.mCallType = CALL_TYPE_VOICE
+                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_INVALID
             }
 
-            2 -> {
-                mProfile.mCallType = 6
-                mProfile.mMediaProfile.mVideoDirection = 1
-                return
+            HwImsCallDetails.CALL_TYPE_VT -> {
+                mProfile.mCallType = CALL_TYPE_VT
+                mProfile.mMediaProfile.mVideoDirection =
+                    ImsStreamMediaProfile.DIRECTION_SEND_RECEIVE
             }
 
-            3 -> {
-                mProfile.mCallType = 4
-                mProfile.mMediaProfile.mVideoDirection = 3
-                return
+            HwImsCallDetails.CALL_TYPE_VT_TX -> {
+                mProfile.mCallType = CALL_TYPE_VT_TX
+                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_SEND
             }
 
-            4 -> {
-                mProfile.mMediaProfile.mVideoDirection = 0
-                return
+            HwImsCallDetails.CALL_TYPE_VT_RX -> {
+                mProfile.mCallType = CALL_TYPE_VT_RX
+                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_RECEIVE
             }
 
-            else -> return
+            HwImsCallDetails.CALL_TYPE_VT_NODIR ->                 // Not propagating VT_NODIR call type to UI
+                mProfile.mMediaProfile.mVideoDirection =
+                    ImsStreamMediaProfile.DIRECTION_INACTIVE
         }
 
     }

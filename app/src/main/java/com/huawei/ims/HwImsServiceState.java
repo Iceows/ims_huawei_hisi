@@ -28,7 +28,7 @@ package com.huawei.ims;
 import android.os.Parcel;
 
 
-public class ImsServiceState {
+public class HwImsServiceState {
 
 
     public static final int CALL_TYPE_VOICE = 0;
@@ -101,11 +101,11 @@ public class ImsServiceState {
         }
     }
 
-    public ImsServiceState() {
+    public HwImsServiceState() {
         this.isValid = false;
     }
 
-    public ImsServiceState(Parcel parcel) {
+    public HwImsServiceState(Parcel parcel) {
         boolean z = false;
         this.isValid = false;
         if (parcel != null) {

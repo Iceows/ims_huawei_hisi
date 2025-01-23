@@ -172,7 +172,7 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
     }
 
     private fun redactCall(call: DriverImsCall): String {
-        return "{.state = " + call.state + ", .index = " + call.index + ", .toa = " + call.TOA + ", .isMpty = " + call.isMpty + ", .isMT = " + call.isMT + ", .als = " + call.als + ", .isVoice = " + call.isVoice + ", .isVoicePrivacy = " + call.isVoicePrivacy + ", .number = " + Rlog.pii(LOG_TAG, call.number) + ", .numberPresentation = " + call.numberPresentation + ", .name = " + Rlog.pii(LOG_TAG, call.name) + ", .namePresentation = " + call.namePresentation + ", .callDetails = " + call.imsCallProfile.toString() +  ", .peerVideoSupport = " + call.peerVideoSupport + "}"
+        return "{.state = " + call.state + ", .index = " + call.index + ", .toa = " + call.TOA + ", .isMpty = " + call.isMpty + ", .isMT = " + call.isMT + ", .als = " + call.als + ", .isVoice = " + call.isVoice + ", .isVoicePrivacy = " + call.isVoicePrivacy + ", .number = " + Rlog.pii(LOG_TAG, call.number) + ", .numberPresentation = " + call.numberPresentation + ", .name = " + Rlog.pii(LOG_TAG, call.name) + ", .namePresentation = " + call.namePresentation + ", .callProfiles = " + call.imsCallProfiles.toString() +  ", .peerVideoSupport = " + call.peerVideoSupport + "}"
     }
 
     // https://github.com/LineageOS/android_frameworks_opt_telephony/blob/lineage-16.0/src/java/com/android/internal/telephony/RadioResponse.java

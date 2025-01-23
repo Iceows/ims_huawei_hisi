@@ -35,7 +35,7 @@ import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallDetails;
 
 
 
-public class ImsCallProfiles {
+public class HwImsCallDetails {
 
     /*
      * Type of the call based on the media type and the direction of the media.
@@ -170,24 +170,24 @@ public class ImsCallProfiles {
     public String[] extras;
     private int mVideoPauseState = VIDEO_PAUSE_STATE_RESUMED;
 
-    public ImsServiceState[] localAbility;
-    public ImsServiceState[] peerAbility;
+    public HwImsServiceState[] localAbility;
+    public HwImsServiceState[] peerAbility;
 
 
-    public ImsCallProfiles() {
+    public HwImsCallDetails() {
         this.call_type = CALL_TYPE_UNKNOWN;
         this.call_domain = CALL_DOMAIN_NOT_SET;
         this.extras = null;
     }
 
-    public ImsCallProfiles(int callType, int callDomain, String[] extraparams) {
+    public HwImsCallDetails(int callType, int callDomain, String[] extraparams) {
         call_type = callType;
         call_domain = callDomain;
         extras = extraparams;
     }
 
 
-    public ImsCallProfiles(ImsCallProfiles imsCallProfiles) {
+    public HwImsCallDetails(HwImsCallDetails imsCallProfiles) {
         if (imsCallProfiles != null) {
             this.call_type = imsCallProfiles.call_type;
             this.call_domain = imsCallProfiles.call_domain;
@@ -199,7 +199,7 @@ public class ImsCallProfiles {
         }
     }
 
-    public ImsCallProfiles(RILImsCallDetails rILImsCallDetails) {
+    public HwImsCallDetails(RILImsCallDetails rILImsCallDetails) {
         if (rILImsCallDetails != null) {
             this.call_type = rILImsCallDetails.callType;
             this.call_domain = rILImsCallDetails.callDomain;
@@ -283,10 +283,10 @@ public class ImsCallProfiles {
      */
     @Override
     public String toString() {
-        ImsServiceState[] imsServiceStateArr;
-        ImsServiceState.StatusForAccessTech[] statusForAccessTechArr;
-        ImsServiceState[] imsServiceStateArr2;
-        ImsServiceState.StatusForAccessTech[] statusForAccessTechArr2;
+        HwImsServiceState[] imsServiceStateArr;
+        HwImsServiceState.StatusForAccessTech[] statusForAccessTechArr;
+        HwImsServiceState[] imsServiceStateArr2;
+        HwImsServiceState.StatusForAccessTech[] statusForAccessTechArr2;
         String[] strArr;
         String extrasResult = NULL_STRING_VALUE;
         String localSrvAbility = NULL_STRING_VALUE;
@@ -308,7 +308,7 @@ public class ImsCallProfiles {
         }
         if (this.localAbility != null) {
             StringBuffer buf = new StringBuffer(NULL_STRING_VALUE);
-            for (ImsServiceState srv : this.localAbility) {
+            for (HwImsServiceState srv : this.localAbility) {
                 if (srv != null) {
                     buf.append("isValid = ");
                     buf.append(srv.isValid);
@@ -317,7 +317,7 @@ public class ImsCallProfiles {
                     buf.append(" state = ");
                     buf.append(srv.state);
                     if (srv.accessTechStatus != null) {
-                        for (ImsServiceState.StatusForAccessTech at : srv.accessTechStatus) {
+                        for (HwImsServiceState.StatusForAccessTech at : srv.accessTechStatus) {
                             buf.append(" accTechStatus ");
                             buf.append(at);
                         }
@@ -328,7 +328,7 @@ public class ImsCallProfiles {
         }
         if (this.peerAbility != null) {
             StringBuffer buf2 = new StringBuffer(NULL_STRING_VALUE);
-            for (ImsServiceState srv2 : this.peerAbility) {
+            for (HwImsServiceState srv2 : this.peerAbility) {
                 if (srv2 != null) {
                     buf2.append("isValid = ");
                     buf2.append(srv2.isValid);
@@ -337,7 +337,7 @@ public class ImsCallProfiles {
                     buf2.append(" state = ");
                     buf2.append(srv2.state);
                     if (srv2.accessTechStatus != null) {
-                        for (ImsServiceState.StatusForAccessTech at2 : srv2.accessTechStatus) {
+                        for (HwImsServiceState.StatusForAccessTech at2 : srv2.accessTechStatus) {
                             buf2.append(" accTechStatus ");
                             buf2.append(at2);
                         }
@@ -358,7 +358,7 @@ public class ImsCallProfiles {
                 + " Peer Ability " + peerSrvAbility;
     }
 
-    public boolean update(ImsCallProfiles imsCallProfiles) {
+    public boolean update(HwImsCallDetails imsCallProfiles) {
         boolean z;
         boolean z2 = false;
         if (imsCallProfiles == null) {

@@ -12,7 +12,7 @@ public class DriverImsCall extends DriverCall {
     static final String LOG_TAG = "DriverImsCall";
     public static final String SEPARATOR_TAG = ",";
     public ImsReasonInfo callFailCause;
-    public ImsCallProfiles imsCallProfile;
+    public HwImsCallDetails imsCallProfiles;
     public int peerVideoSupport;
     public int radioTechFromRilImsCall;
     public String redirectNumber;
@@ -35,7 +35,7 @@ public class DriverImsCall extends DriverCall {
         this.redirectNumber = null;
         this.redirectNumberToa = 0;
         this.redirectNumberPresentation = 1;
-        this.imsCallProfile = new ImsCallProfiles();
+        this.imsCallProfiles = new HwImsCallDetails();
     }
 
     public DriverImsCall(DriverImsCall driverImsCall) {
@@ -43,7 +43,7 @@ public class DriverImsCall extends DriverCall {
         this.redirectNumber = null;
         this.redirectNumberToa = 0;
         this.redirectNumberPresentation = 1;
-        this.imsCallProfile = new ImsCallProfiles(driverImsCall.imsCallProfile);
+        this.imsCallProfiles = new HwImsCallDetails(driverImsCall.imsCallProfiles);
         this.callFailCause = new ImsReasonInfo();
         this.state = driverImsCall.state;
         this.index = driverImsCall.index;
@@ -70,7 +70,7 @@ public class DriverImsCall extends DriverCall {
         this.redirectNumberToa = 0;
         this.redirectNumberPresentation = 1;
         if (rILImsCall != null) {
-            this.imsCallProfile = new ImsCallProfiles(rILImsCall.callDetails);
+            this.imsCallProfiles = new HwImsCallDetails(rILImsCall.callDetails);
             this.callFailCause = new ImsReasonInfo();
             this.state = stateFromCall(rILImsCall.state);
             this.index = rILImsCall.index;
@@ -94,7 +94,7 @@ public class DriverImsCall extends DriverCall {
         this.redirectNumberToa = 0;
         this.redirectNumberPresentation = 1;
         if (rILImsCallEx != null) {
-            this.imsCallProfile = new ImsCallProfiles(rILImsCallEx.callDetails);
+            this.imsCallProfiles = new HwImsCallDetails(rILImsCallEx.callDetails);
             this.callFailCause = new ImsReasonInfo();
             this.state = stateFromCall(rILImsCallEx.state);
             this.index = rILImsCallEx.index;
@@ -119,7 +119,7 @@ public class DriverImsCall extends DriverCall {
         this.redirectNumberToa = 0;
         this.redirectNumberPresentation = 1;
         if (rILImsCallV1_2 != null) {
-            this.imsCallProfile = new ImsCallProfiles(rILImsCallV1_2.callDetails);
+            this.imsCallProfiles = new HwImsCallDetails(rILImsCallV1_2.callDetails);
             this.callFailCause = new ImsReasonInfo();
             this.state = stateFromCall(rILImsCallV1_2.state);
             this.index = rILImsCallV1_2.index;
@@ -222,7 +222,7 @@ public class DriverImsCall extends DriverCall {
         sb.append(",,");
         sb.append(this.namePresentation);
         sb.append("Ims Call Profile =");
-        sb.append(this.imsCallProfile);
+        sb.append(this.imsCallProfiles);
         sb.append(",redirectNumber = ");
         sb.append(HiddenPrivacyInfo.putMosaic(this.redirectNumber, 0));
         sb.append(",redirectNumberToa = ");
@@ -251,7 +251,7 @@ public class DriverImsCall extends DriverCall {
             }
         }
         boolean z = isChanged;
-        if (this.imsCallProfile.update(driverImsCall.imsCallProfile)) {
+        if (this.imsCallProfiles.update(driverImsCall.imsCallProfiles)) {
             z = isChanged;
             if (!isChanged) {
                 z = true;
