@@ -24,7 +24,7 @@
 
       It seems that this is part of a set of classes published by codeaurora
 
-      This classe use ImsServiceState
+      This class use ImsServiceState
  */
 
 package com.huawei.ims;

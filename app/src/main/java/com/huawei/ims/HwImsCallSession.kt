@@ -36,12 +36,19 @@ import vendor.huawei.hardware.radio.ims.V1_0.RILImsCallType
 import vendor.huawei.hardware.radio.ims.V1_0.RILImsDial
 import java.util.concurrent.ConcurrentHashMap
 
+
+// ImsCallSessionImplBase have a trackingBug = 170729553 , Android 11 max
+
+
 class HwImsCallSession
 /* For outgoing (MO) calls */ (private val mSlotId: Int, profile: ImsCallProfile) : ImsCallSessionImplBase() {
+
     private var mbV1_2Call = false
     private val mProfile: ImsCallProfile
     private val mLocalProfile: ImsCallProfile
     private val mRemoteProfile: ImsCallProfile
+
+    private val mStreamMediaProfile : ImsStreamMediaProfile
 
     private var listener: ImsCallSessionListener? = null
 
@@ -73,6 +80,8 @@ class HwImsCallSession
         this.redirectNumber = null
         this.redirectNumberToa = 0
         this.redirectNumberPresentation = 1
+
+        this.mStreamMediaProfile = ImsStreamMediaProfile()
     }
 
     // For incoming (MT) calls
@@ -136,7 +145,15 @@ class HwImsCallSession
 
             DriverImsCall.State.DIALING -> {
                 Rlog.i(tag, "Dialing ")
-                listener?.callSessionProgressing(ImsStreamMediaProfile())
+                // Strange Dialing can call several time - on LOS 20, crash the second time !!
+                if (driverImsCall!=null) {
+                    if (driverImsCall!!.state == DriverImsCall.State.DIALING) {
+                        Rlog.i(tag, "Old state is already dialing ")
+                    }
+                }
+                else {
+                    listener?.callSessionProgressing(mStreamMediaProfile)
+                }
             }
 
             DriverImsCall.State.ALERTING
@@ -616,8 +633,8 @@ class HwImsCallSession
     override fun isMultiparty(): Boolean {
         if (driverImsCall!=null)
             return driverImsCall!!.isMpty
-
-        return false
+        else
+            return false
     }
 
     companion object {
