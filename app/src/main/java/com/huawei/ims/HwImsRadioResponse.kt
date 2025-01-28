@@ -167,6 +167,7 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
 
                 Log.i(LOG_TAG, "calls list contains " + redactCall(driverImsCall))
 
+                /*
                 // RIL sometimes gives us the leading +, so first try with one, and if its null, try again without the +.
                 var session = HwImsCallSession.awaitingIdFromRIL["+" + driverImsCall.number]
                 if (session == null)
@@ -175,8 +176,6 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
                     Rlog.d(LOG_TAG, "Giving call id from ril.")
                     session.addIdFromRIL(driverImsCall)
                 }
-
-                /*
                 session = HwImsCallSession.calls[driverImsCall.index]
                 if (session == null) {
                     Log.i(LOG_TAG, "Session not found in HwImsCallSession calls ")
