@@ -43,19 +43,22 @@ import com.android.ims.ImsConfigListener
 import java.util.concurrent.ConcurrentHashMap
 
 
-class HwImsConfig : ImsConfigImplBase() {
+class HwImsConfigImpl(slotId: Int) : ImsConfigImplBase() {
+    private var mSlotId: Int = -1
     private val configInt = ConcurrentHashMap<Int, Int>()
     private val configString = ConcurrentHashMap<Int, String>()
-    private val LOG_TAG = "HwImsConfig"
-
+    private val LOG_TAG = "HwImsConfigImpl"
 
     private val EVENT_SET_VIDEO_QUALITY_DONE = 1
     private val EVENT_GET_VIDEO_QUALITY_DONE = 2
     private val EVENT_SET_FEATURE_VALUE = 3
 
 
+    // initializer block
     init {
         Log.i(LOG_TAG,"Init")
+
+        mSlotId = slotId
 
         // We support VoLTE by default.
         configInt[ImsConfig.ConfigConstants.VLT_SETTING_ENABLED] = ImsConfig.FeatureValueConstants.ON
@@ -63,6 +66,7 @@ class HwImsConfig : ImsConfigImplBase() {
 
     }
 
+    
     override fun setConfig(item: Int, value: Int): Int {
         configInt[item] = value
 
@@ -112,15 +116,15 @@ class HwImsConfig : ImsConfigImplBase() {
 
             when (msg.what) {
                 1 -> {
-                    HwImsConfig.onSetVideoCallQualityDone(HwImsConfig.getImsConfigListener(ar), ar)
+                    HwImsConfigImpl.onSetVideoCallQualityDone(HwImsConfigImpl.getImsConfigListener(ar), ar)
                     return
                 }
                 2 -> {
-                    HwImsConfig.onGetVideoCallQualityDone(HwImsConfig.getImsConfigListener(ar), ar)
+                    HwImsConfigImpl.onGetVideoCallQualityDone(HwImsConfigImpl.getImsConfigListener(ar), ar)
                     return
                 }
                 3 -> {
-                    HwImsConfig.onSetFeatureResponseDone(HwImsConfig.getImsConfigListener(ar), ar)
+                    HwImsConfigImpl.onSetFeatureResponseDone(HwImsConfigImpl.getImsConfigListener(ar), ar)
                     return
                 }
                 else -> {
