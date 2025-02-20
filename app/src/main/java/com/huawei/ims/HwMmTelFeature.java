@@ -39,10 +39,14 @@ import com.android.ims.ImsException;
 
 public class HwMmTelFeature extends MmTelFeature {
 
+    private MmTelCapabilities mMmtelCapabilities = new MmTelFeature.MmTelCapabilities();
+    //private RegistrantList mCapabilitiesChangedRegistrants = new RegistrantList();
+
     private static final HwMmTelFeature[] instances = {null, null, null};
     private final String LOG_TAG = "HwImsMmTelFeatureImpl";
     // Enabled Capabilities - not status
     private final SparseArray<MmTelCapabilities> mEnabledCapabilities = new SparseArray<>();
+
     private final int mSlotId;
     private boolean mbImsRegister;
     public TelephonyManager telephonyManager;
@@ -110,36 +114,40 @@ public class HwMmTelFeature extends MmTelFeature {
     private void registerImsInner() {
         try {
             Log.d(LOG_TAG, "registerImsInner");
-            RilHolder.INSTANCE.getHisiRadio(mSlotId).imsRegister(RilHolder.INSTANCE.hisicallback((radioResponseInfo, rspMsgPayload) -> {
-                if (radioResponseInfo.error != 0) {
-                    Log.e(LOG_TAG, "radiorespinfo gives error " + radioResponseInfo.error);
-                    HwImsService.Companion.getInstance().getRegistration(mSlotId).onDeregistered(new ImsReasonInfo(ImsReasonInfo.CODE_UNSPECIFIED, radioResponseInfo.error, radioResponseInfo.toString() + rspMsgPayload.toString()));
-                } else {
-                    MmTelCapabilities capabilities = new MmTelCapabilities();
-                    capabilities.addCapabilities(MmTelCapabilities.CAPABILITY_TYPE_VOICE);
-                    notifyCapabilitiesStatusChanged(capabilities);
-                    HwImsService.Companion.getInstance().getRegistration(mSlotId).notifyRegistered(HwImsRegistration.REGISTRATION_TECH_LTE);
-                }
-                return null;
-            }, mSlotId));
+            int serial = RilHolder.INSTANCE.hisicallback(
+                    (radioResponseInfo, rspMsgPayload) -> {
+                        if (radioResponseInfo.error != 0) {
+                            Log.e(LOG_TAG, "radiorespinfo gives error " + radioResponseInfo.error);
+                            HwImsService.Companion.getInstance().getRegistration(mSlotId).onDeregistered(new ImsReasonInfo(ImsReasonInfo.CODE_UNSPECIFIED, radioResponseInfo.error, radioResponseInfo.toString() + rspMsgPayload.toString()));
+                        } else {
+                            mMmtelCapabilities.addCapabilities(MmTelCapabilities.CAPABILITY_TYPE_VOICE);
+                            notifyCapabilitiesStatusChanged(mMmtelCapabilities);
+                            HwImsService.Companion.getInstance().getRegistration(mSlotId).notifyRegistered(HwImsRegistration.REGISTRATION_TECH_LTE);
+                        }
+                        return null;
+                    }, mSlotId);
+            RilHolder.INSTANCE.getHisiRadio(mSlotId).imsRegister(serial);
         } catch (RemoteException e) {
             HwImsService.Companion.getInstance().getRegistration(mSlotId).notifyDeregistered(new ImsReasonInfo(), ImsRegistrationImplBase.REGISTRATION_TECH_LTE);
             Log.e(LOG_TAG, "error registering ims", e);
         }
     }
 
-    public void registerIms() {
+    public void registerImsAndSwitch() {
         Log.d(LOG_TAG, "registerIms");
         HwImsService.Companion.getInstance().getRegistration(mSlotId).notifyRegistering(HwImsRegistration.REGISTRATION_TECH_LTE);
         try {
-            RilHolder.INSTANCE.getRadio(mSlotId).setImsSwitch(RilHolder.INSTANCE.callback((radioResponseInfo, rspMsgPayload) -> {
+            int serial=RilHolder.INSTANCE.callback((radioResponseInfo, rspMsgPayload) -> {
                 if (radioResponseInfo.error != 0) {
                     HwImsService.Companion.getInstance().getRegistration(mSlotId).notifyDeregistered(new ImsReasonInfo(), ImsRegistrationImplBase.REGISTRATION_TECH_LTE);
                 } else {
                     registerImsInner();
                 }
                 return null;
-            }, mSlotId), 1);
+            } , mSlotId);
+            Log.d(LOG_TAG, "registerIms serial = " + serial + " - slotid = " + mSlotId);
+            // Phoneid, value
+            RilHolder.INSTANCE.getRadio(mSlotId).setImsSwitch(serial,1);
             mbImsRegister=true;
         } catch (RemoteException e) {
             HwImsService.Companion.getInstance().getRegistration(mSlotId).notifyDeregistered(new ImsReasonInfo(), ImsRegistrationImplBase.REGISTRATION_TECH_LTE);
@@ -150,7 +158,10 @@ public class HwMmTelFeature extends MmTelFeature {
 
     public void unregisterIms() {
         Log.d(LOG_TAG, "unregisterIms");
-
+        if (mbImsRegister) {
+            mMmtelCapabilities.removeCapabilities(MmTelCapabilities.CAPABILITY_TYPE_VOICE);
+            mbImsRegister=false;
+        }
     }
 
     @Override
@@ -168,7 +179,7 @@ public class HwMmTelFeature extends MmTelFeature {
             // Check status of IMS
             Log.d(LOG_TAG,"createCallProfile for service type none");
             // Register IMS
-            registerIms();
+            registerImsAndSwitch();
         }
         if (callSessionType == ImsCallProfile.SERVICE_TYPE_NORMAL) {
             Log.d(LOG_TAG,"createCallProfile for service type normal");

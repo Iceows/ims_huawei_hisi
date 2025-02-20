@@ -88,7 +88,6 @@ class MainActivity : Activity() {
     fun restartRILD0(view: View) {
         try {
             RilHolder.getRadio(0)!!.restartRILD(RilHolder.getNextSerial())
-            RilHolder.getImsRadio(0)!!.restartRILD(RilHolder.getNextSerial())
         } catch (ignored: NullPointerException) {
         }
 
@@ -97,7 +96,6 @@ class MainActivity : Activity() {
     fun restartRILD1(view: View) {
         try {
             RilHolder.getRadio(1)!!.restartRILD(RilHolder.getNextSerial())
-            RilHolder.getImsRadio(1)!!.restartRILD(RilHolder.getNextSerial())
         } catch (ignored: NullPointerException) {
         }
     }

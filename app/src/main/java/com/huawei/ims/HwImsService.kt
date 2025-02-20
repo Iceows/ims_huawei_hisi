@@ -17,9 +17,9 @@
 
 package com.huawei.ims
 
-import android.app.NotificationManager
 import android.content.*
-import android.support.v4.content.ContextCompat.getSystemService
+import android.os.Handler
+import android.os.SystemProperties
 import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import android.telephony.ims.ImsService
@@ -27,28 +27,33 @@ import android.telephony.ims.feature.ImsFeature
 import android.telephony.ims.stub.ImsConfigImplBase
 import android.telephony.ims.stub.ImsFeatureConfiguration
 import android.util.Log
-import android.telephony.Rlog
-
-import android.os.SystemProperties
-
 
 
 class HwImsService : ImsService() {
+    private val mHandler: Handler? = null
     private val mmTelFeatures = arrayOfNulls<HwMmTelFeature>(3)
     private val registrations = arrayOfNulls<HwImsRegistration>(3)
-    private val configs = arrayOfNulls<HwImsConfig>(3)
+    private val configs = arrayOfNulls<HwImsConfigImpl>(3)
     private var prefs: SharedPreferences? = null
 
     private var isVolteEnable = 0
+    private var mCi:ImsRIL ? = null
 
     private val APP_NAME_IMS = "com.huawei.ims"
     internal lateinit var subscriptionManager: SubscriptionManager
     internal lateinit var telephonyManager: TelephonyManager
 
+
+    private fun getNumSlots(): Int {
+        return 1;
+    }
+
     override fun onCreate() {
         val storageContext: Context
 
         Log.i(LOG_TAG, "HwImsService (Iceows) version " + BuildConfig.GIT_HASH + " created!")
+        super.onCreate()
+
         subscriptionManager = getSystemService(SubscriptionManager::class.java) as SubscriptionManager
         telephonyManager = getSystemService(TelephonyManager::class.java) as TelephonyManager
 
@@ -67,6 +72,11 @@ class HwImsService : ImsService() {
         storageContext = directBootContext;
         prefs = storageContext.getSharedPreferences(APP_NAME_IMS, Context.MODE_PRIVATE)
 
+        // Only one service IMS for the moment - instanceid=0
+        this.mCi = RilHolder.initImsRIL(this, 0)
+
+        mCi!!.registerForImsNetworkStateChanged(this.mHandler, 2, null)
+
         MapconController.getInstance().init(this)
     }
 
@@ -80,9 +90,9 @@ class HwImsService : ImsService() {
         val vHwMmTelFeature = createMmTelFeature(slotId)
 
         if (vHwMmTelFeature!=null)
-            vHwMmTelFeature.registerIms()
+            vHwMmTelFeature.registerImsAndSwitch()
         else
-            Log.i(LOG_TAG, "Impossible to enable Ims on slotid "+ slotId )
+            Log.i(LOG_TAG, "Fail to enable Ims on slotid "+ slotId )
     }
 
     override fun disableIms(slotId: Int) {
@@ -137,7 +147,7 @@ class HwImsService : ImsService() {
             return null
         }
         if (configs[slotId] == null) {
-            configs[slotId] = HwImsConfig()
+            configs[slotId] = HwImsConfigImpl(slotId)
         }
         return configs[slotId]
     }
@@ -150,6 +160,10 @@ class HwImsService : ImsService() {
             registrations[slotId] = HwImsRegistration(slotId)
         }
         return this.registrations[slotId]
+    }
+
+    class HwImsServiceHandler : Handler() {
+
     }
 
 

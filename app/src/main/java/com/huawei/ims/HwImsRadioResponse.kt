@@ -18,9 +18,9 @@
 package com.huawei.ims
 
 
-import android.os.Bundle
+import android.os.AsyncResult
+import android.os.Message
 import android.telephony.Rlog
-import android.telephony.ims.ImsCallProfile
 import android.util.Log
 import vendor.huawei.hardware.radio.ims.V1_0.IRadioImsResponse
 import vendor.huawei.hardware.radio.ims.V1_0.LastCallFailCauseInfo
@@ -105,6 +105,18 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
      */
     val EXTRA_IS_UNKNOWN_CALL = "android:isUnknown"
 
+    var mRil: ImsRIL? = null
+
+    fun ImsRadioResponse(ril: ImsRIL?) {
+        mRil = ril
+    }
+
+    private fun sendMessageResponse(msg: Message?, ret: Any) {
+        if (msg != null) {
+            AsyncResult.forMessage(msg, ret, null as Throwable?)
+            msg.sendToTarget()
+        }
+    }
     override fun RspMsg(
         radioResponseInfo: RadioResponseInfo?,
         msgType: Int,
@@ -127,9 +139,6 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
 
             else -> Log.w(LOG_TAG, "Unknown msg type :$msgType")
         }
-
-        // Huawei
-        radioResponseInfo?.let { RilHolder.triggerImsCB(it.serial, radioResponseInfo, rspMsgPayload) }
 
     }
 
@@ -275,7 +284,7 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
 
     // vendor.huawei.hardware.radio.ims.V1_0.IRadioImsResponse
     override fun setImsRegErrReportResponse(responseInfo: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
-        responseVoid(responseInfo)
+        TODO("Not yet implemented")
     }
 
     override fun setMuteResponse(responseInfo: vendor.huawei.hardware.radio.ims.V1_0.RadioResponseInfo?) {
@@ -299,12 +308,6 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         p1: RILUICCAUTHRESPONSE?
     ) {
         TODO("Not yet implemented")
-    }
-
-    private fun responseVoid(radioResponseInfo: RadioResponseInfo?) {
-
-        radioResponseInfo?.let { RilHolder.triggerImsCB(it.serial, radioResponseInfo,null) }
-
     }
 
 

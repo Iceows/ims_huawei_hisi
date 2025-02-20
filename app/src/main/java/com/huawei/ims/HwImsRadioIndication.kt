@@ -18,6 +18,7 @@
 package com.huawei.ims
 
 
+import android.os.AsyncResult
 import android.os.RemoteException
 import android.telephony.Rlog
 import android.util.Log
@@ -53,7 +54,11 @@ class HwImsRadioIndication internal constructor(private val mSlotId: Int) : IRad
 
     private val LOG_TAG = "HwImsRadioIndication"
 
+    var mRil: ImsRIL? = null
 
+    fun ImsRadioIndication(ril: ImsRIL?) {
+        mRil = ril
+    }
 
     override fun UnsolMsg(indicationType: Int, msgId: Int, rilUnsolMsgPayload: RILUnsolMsgPayload) {
         Log.d(LOG_TAG, "indicationType = $indicationType, msgId = $msgId, msgPayload = $rilUnsolMsgPayload")
@@ -112,11 +117,6 @@ class HwImsRadioIndication internal constructor(private val mSlotId: Int) : IRad
             // Weird...
             Rlog.w(LOG_TAG, "unknown indicationType $indicationType")
         }
-        try {
-            RilHolder.getImsRadio(mSlotId)!!.getCurrentImsCalls(RilHolder.getNextSerial())
-        } catch (e: RemoteException) {
-            Rlog.e(LOG_TAG, "Error getting current calls", e)
-        }
 
     }
 
@@ -133,12 +133,8 @@ class HwImsRadioIndication internal constructor(private val mSlotId: Int) : IRad
     }
 
     override fun imsCallModifyInd(type: Int, modify: RILImsCallModify) {
-        try {
-            RilHolder.getImsRadio(mSlotId)!!.getCurrentImsCalls(RilHolder.getNextSerial())
-        } catch (e: RemoteException) {
-            Rlog.e(LOG_TAG, "Error getting current calls for handover", e)
-        }
         // Huawei
+        Rlog.d(LOG_TAG, "imsCallModifyInd" + type)
     }
 
     override fun imsCallMtStatusInd(type: Int, imsCallMtStatus: RILImsMtStatusReport) {
