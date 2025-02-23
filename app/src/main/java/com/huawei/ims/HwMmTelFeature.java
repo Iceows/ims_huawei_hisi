@@ -181,6 +181,8 @@ public class HwMmTelFeature extends MmTelFeature {
 
     @Override
     public synchronized ImsCallSessionImplBase createCallSession(@NonNull ImsCallProfile profile) {
+        Log.d(LOG_TAG,"createCallSession now !!");
+
         return new HwImsCallSession(mSlotId, profile);
     }
 

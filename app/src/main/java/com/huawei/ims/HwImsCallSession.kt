@@ -17,8 +17,6 @@
 
 package com.huawei.ims
 
-import android.annotation.SuppressLint
-import android.os.Bundle
 import android.os.Message
 import android.os.RemoteException
 import android.telephony.PhoneNumberUtils
@@ -43,8 +41,9 @@ import java.util.concurrent.ConcurrentHashMap
 class HwImsCallSession
 /* For outgoing (MO) calls */ (private val mSlotId: Int, profile: ImsCallProfile) : ImsCallSessionImplBase() {
 
+    private var mCallId = 0
     private var mbV1_2Call = false
-    private val mProfile: ImsCallProfile
+    private val mCallProfile: ImsCallProfile
     private val mLocalProfile: ImsCallProfile
     private val mRemoteProfile: ImsCallProfile
 
@@ -70,8 +69,7 @@ class HwImsCallSession
     init {
         this.mCount = sCount++
 
-
-        this.mProfile = ImsCallProfile(SERVICE_TYPE_NORMAL, profile.callType)
+        this.mCallProfile = ImsCallProfile(SERVICE_TYPE_NORMAL, profile.callType)
         this.mLocalProfile = ImsCallProfile(SERVICE_TYPE_NORMAL, profile.callType)
         this.mRemoteProfile = ImsCallProfile(SERVICE_TYPE_NORMAL, profile.callType)
         this.mState = State.IDLE
@@ -82,13 +80,16 @@ class HwImsCallSession
         this.redirectNumberPresentation = 1
 
         this.mStreamMediaProfile = ImsStreamMediaProfile()
+
     }
 
     // For incoming (MT) calls
     constructor(slotId: Int, profile: ImsCallProfile, dc: DriverImsCall) : this(slotId, profile) {
+        Log.d(tag, "constructor")
         updateCall(dc)
         calls[dc.index] = this
         mbV1_2Call = false
+        mCallId = dc.index
     }
 
     fun addIdFromRIL(dc: DriverImsCall) {
@@ -116,23 +117,36 @@ class HwImsCallSession
         }
     }
 
-
-    @SuppressLint("MissingPermission")
-    fun updateCall(call: DriverImsCall) {
+    fun updateCall(dcUpdate: DriverImsCall) {
         val lastState = mState
-        when (call.state) {
+
+        when (dcUpdate.state) {
             DriverImsCall.State.ACTIVE -> {
+                Rlog.i(tag, "Active ")
                 if (driverImsCall == null) {
                     Rlog.e(tag, "Phantom call!")
+                    mCallId = dcUpdate.index
                     mState = State.ESTABLISHED
-                    listener?.callSessionInitiated(mProfile)
+                    listener?.callSessionInitiated(mCallProfile)
                 } else if (driverImsCall!!.state ==  DriverImsCall.State.DIALING ||  driverImsCall!!.state == DriverImsCall.State.ALERTING ||  driverImsCall!!.state == DriverImsCall.State.INCOMING ||   driverImsCall!!.state == DriverImsCall.State.WAITING  ) {
-                        mState = State.ESTABLISHED
-                    extractImsCallProfileIntoCallProfile(call)
-                        listener?.callSessionInitiated(mProfile)
+                    mState = State.ESTABLISHED
+                    driverImsCall!!.state=DriverImsCall.State.ACTIVE;
+                    extractImsCallProfileIntoCallProfile(dcUpdate)
+                    listener?.callSessionInitiated(mCallProfile)
+
+                /*} else if (this.mDc.state == DriverImsCall.State.DIALING || this.mDc.state == DriverImsCall.State.ALERTING || this.mDc.state == DriverImsCall.State.INCOMING || this.mDc.state == DriverImsCall.State.WAITING) {
+                    this.mState = 4;
+                    this.mDc.state = DriverImsCall.State.ACTIVE;
+                    extractImsCallProfileIntoCallProfile(dcUpdate);
+                    if (ImsCallProviderUtils.isVilteEnhancementSupported()) {
+                        notifyCallSessionStarted();
+                    }
+                    this.mListenerProxy.callSessionStarted(this.mCallProfile);
+                 */
+
                 } else if ((driverImsCall!!.state == DriverImsCall.State.HOLDING && !confInProgress) || confInProgress ) {
                     Rlog.d(tag, "Call being resumed.")
-                    listener?.callSessionResumed(mProfile)
+                    listener?.callSessionResumed(mCallProfile)
                 } else {
                     Rlog.e(tag, "Call resumed skipped, conf status = " + confInProgress)
                 }
@@ -140,7 +154,7 @@ class HwImsCallSession
 
             DriverImsCall.State.HOLDING -> {
                 Rlog.i(tag, "Holding ")
-                listener?.callSessionHeld(mProfile)
+                listener?.callSessionHeld(mCallProfile)
             }
 
             DriverImsCall.State.DIALING -> {
@@ -156,22 +170,24 @@ class HwImsCallSession
                 }
             }
 
-            DriverImsCall.State.ALERTING
-            -> {
+            DriverImsCall.State.ALERTING -> {
+                Rlog.i(tag, "Alerting ")
                 mState = State.NEGOTIATING
                 if (driverImsCall == null) {
                     Rlog.e(tag, "Alerting an incoming call wtf?")
                 } else {
-                    extractImsCallProfileIntoCallProfile(call)
+                    extractImsCallProfileIntoCallProfile(dcUpdate)
                     listener?.callSessionProgressing(ImsStreamMediaProfile())
                 }
             }
-            DriverImsCall.State.INCOMING,  DriverImsCall.State.WAITING
-            -> {
-                extractImsCallProfileIntoCallProfile(call)
+
+            DriverImsCall.State.INCOMING, DriverImsCall.State.WAITING -> {
+                extractImsCallProfileIntoCallProfile(dcUpdate)
             }
-            DriverImsCall.State.END
-            -> die(ImsReasonInfo())
+
+            DriverImsCall.State.END -> {
+                die(ImsReasonInfo())
+            }
         }
 
 /*
@@ -180,10 +196,10 @@ class HwImsCallSession
         val telephonyManager = HwImsService.instance!!.telephonyManager.createForSubscriptionId(subId)
 */
 
-        if (lastState == mState /*state unchanged*/ && call.state !=  DriverImsCall.State.END && call != driverImsCall) {
-            listener?.callSessionUpdated(mProfile)
+        if (lastState == mState /*state unchanged*/ && dcUpdate.state !=  DriverImsCall.State.END && dcUpdate != driverImsCall) {
+            listener?.callSessionUpdated(mCallProfile)
         }
-        driverImsCall = call
+        driverImsCall = dcUpdate
     }
 
     private fun extractImsCallProfileIntoCallProfile(dcUpdate: DriverImsCall)
@@ -195,22 +211,22 @@ class HwImsCallSession
         updateImsCallProfile(dcUpdate)
     }
     private fun updateImsCallProfile(dc: DriverImsCall) {
-        Rlog.d(tag, "enter in updateImsCallProfile")
+        Log.d(tag, "enter in updateImsCallProfile")
         if (dc == null) {
             Rlog.e(tag,"updateImsCallProfile called with dc null")
             return
         }
 
-        mProfile.setCallExtra("oi", dc.number)
-        mProfile.setCallExtra("cna", dc.name)
-        mProfile.setCallExtraInt("oir", presentationToOIR(dc.numberPresentation))
-        mProfile.setCallExtraInt("cnap", presentationToOIR(dc.namePresentation))
-        mProfile.setCallExtraInt("remote_vt_capability", dc.peerVideoSupport)
+        mCallProfile.setCallExtra("oi", dc.number)
+        mCallProfile.setCallExtra("cna", dc.name)
+        mCallProfile.setCallExtraInt("oir", presentationToOIR(dc.numberPresentation))
+        mCallProfile.setCallExtraInt("cnap", presentationToOIR(dc.namePresentation))
+        mCallProfile.setCallExtraInt("remote_vt_capability", dc.peerVideoSupport)
 
         // Normallement dans DriverImsCall
         val ratTypeFromModem = dc.radioTechFromRilImsCall
         if (ratTypeFromModem != -1) {
-            mProfile.setCallExtra("CallRadioTech", getRadioTechFromDriverCall(ratTypeFromModem))
+            mCallProfile.setCallExtra("CallRadioTech", getRadioTechFromDriverCall(ratTypeFromModem))
         } else {
             //val hwTelephonyManager: HwTelephonyManager = HwTelephonyManager.getDefault()
             //if (hwTelephonyManager != null) {
@@ -218,7 +234,7 @@ class HwImsCallSession
                 //val imsRegDomain: Int = hwTelephonyManager.getImsDomain(default4GSlotId)
             //}
             val imsRegDomain=0;
-            mProfile.setCallExtra(
+            mCallProfile.setCallExtra(
                 "CallRadioTech",
                 getRadioTechFromDriverCall(imsRegDomain)
             )
@@ -227,8 +243,8 @@ class HwImsCallSession
         redirectNumberToa = redirectNumberToa
         redirectNumber = PhoneNumberUtils.stringFromStringAndTOA(redirectNumber, redirectNumberToa)
 
-        mProfile.setCallExtra("redirect_number", redirectNumber)
-        mProfile.setCallExtraInt(
+        mCallProfile.setCallExtra("redirect_number", redirectNumber)
+        mCallProfile.setCallExtraInt(
             "redirect_number_presentation",
             presentationToOIR(redirectNumberPresentation)
         )
@@ -236,33 +252,33 @@ class HwImsCallSession
         // Translate Huawei IMS call type
         when (dc.imsCallProfiles.call_type) {
             HwImsCallDetails.CALL_TYPE_UNKNOWN -> {
-                mProfile.mCallType = CALL_TYPE_VOICE_N_VIDEO
-                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_INVALID
+                mCallProfile.mCallType = CALL_TYPE_VOICE_N_VIDEO
+                mCallProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_INVALID
             }
 
             HwImsCallDetails.CALL_TYPE_VOICE -> {
-                mProfile.mCallType = CALL_TYPE_VOICE
-                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_INVALID
+                mCallProfile.mCallType = CALL_TYPE_VOICE
+                mCallProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_INVALID
             }
 
             HwImsCallDetails.CALL_TYPE_VT -> {
-                mProfile.mCallType = CALL_TYPE_VT
-                mProfile.mMediaProfile.mVideoDirection =
+                mCallProfile.mCallType = CALL_TYPE_VT
+                mCallProfile.mMediaProfile.mVideoDirection =
                     ImsStreamMediaProfile.DIRECTION_SEND_RECEIVE
             }
 
             HwImsCallDetails.CALL_TYPE_VT_TX -> {
-                mProfile.mCallType = CALL_TYPE_VT_TX
-                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_SEND
+                mCallProfile.mCallType = CALL_TYPE_VT_TX
+                mCallProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_SEND
             }
 
             HwImsCallDetails.CALL_TYPE_VT_RX -> {
-                mProfile.mCallType = CALL_TYPE_VT_RX
-                mProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_RECEIVE
+                mCallProfile.mCallType = CALL_TYPE_VT_RX
+                mCallProfile.mMediaProfile.mVideoDirection = ImsStreamMediaProfile.DIRECTION_RECEIVE
             }
 
             HwImsCallDetails.CALL_TYPE_VT_NODIR ->                 // Not propagating VT_NODIR call type to UI
-                mProfile.mMediaProfile.mVideoDirection =
+                mCallProfile.mMediaProfile.mVideoDirection =
                     ImsStreamMediaProfile.DIRECTION_INACTIVE
         }
 
@@ -299,7 +315,7 @@ class HwImsCallSession
     }
 
     override fun getCallProfile(): ImsCallProfile {
-        return mProfile
+        return mCallProfile
     }
 
     override fun getRemoteCallProfile(): ImsCallProfile {
@@ -311,7 +327,7 @@ class HwImsCallSession
     }
 
     override fun getProperty(name: String?): String {
-        return mProfile.getCallExtra(name)
+        return mCallProfile.getCallExtra(name)
     }
 
     override fun getState(): Int {
@@ -335,10 +351,13 @@ class HwImsCallSession
 
     }
 
+
     private fun convertAospCallType(callType: Int): Int {
         return when (callType) {
-            CALL_TYPE_VOICE_N_VIDEO, CALL_TYPE_VOICE -> RILImsCallType.CALL_TYPE_VOICE
-            CALL_TYPE_VIDEO_N_VOICE, CALL_TYPE_VT -> RILImsCallType.CALL_TYPE_VT
+            CALL_TYPE_VOICE_N_VIDEO-> RILImsCallType.CALL_TYPE_SMS
+            CALL_TYPE_VOICE -> RILImsCallType.CALL_TYPE_VOICE
+            CALL_TYPE_VIDEO_N_VOICE -> RILImsCallType.CALL_TYPE_VT
+            CALL_TYPE_VT -> RILImsCallType.CALL_TYPE_VT
             CALL_TYPE_VT_TX -> RILImsCallType.CALL_TYPE_VT_TX
             CALL_TYPE_VT_RX -> RILImsCallType.CALL_TYPE_VT_RX
             CALL_TYPE_VT_NODIR -> RILImsCallType.CALL_TYPE_VT_NODIR
@@ -349,15 +368,64 @@ class HwImsCallSession
         }
     }
 
-    override fun start(callee: String, profile: ImsCallProfile?) {
-        Log.d(tag, "calling " + Rlog.pii(tag, callee))
+    /*
+    fun extractProfileExtrasIntoImsCallProfile(profile: ImsCallProfile?, details: ImsCallProfiles ) {
+        val callExtras = profile!!.mCallExtras.getBundle("OemCallExtras")
+        if (callExtras != null) {
+            val extras = arrayOfNulls<String>(callExtras.size())
+            var i = 0
+            for (key in callExtras.keySet()) {
+                val value =
+                    if (callExtras[key] == null) HwImsConfigImpl.NULL_STRING_VALUE else callExtras[key].toString()
+                val extraString = "$key=$value"
+                var extraStringForOutput = extraString
+                if (key == com.huawei.ims.HwImsCallSessionImpl.NUMBERMARKINFO_NUMBER || key == com.huawei.ims.HwImsCallSessionImpl.MEXTI_SEARCH_NUMBER || key == com.huawei.ims.HwImsCallSessionImpl.MEXTI_BACKUP_NUMBER) {
+                    val value2 = HiddenPrivacyInfo.putMosaic(callExtras[key].toString(), 0)
+                    extraStringForOutput = "$key=$value2"
+                }
+                Rlog.d(tag,"Packing extra string: $extraStringForOutput")
+                extras[i] = extraString
+                i++
+            }
+            details.setExtras(extras)
+            return
+        }
+        Rlog.d(tag,"No extras in ImsCallProfile to map into ImsCallProfiles.")
+    }
+*/
+
+/*
+        mCallProfile.mCallType = profile.mCallType
+        mCallProfile.mMediaProfile = profile.mMediaProfile
+        mState = 1
         mCallee = callee
+        val clir: Int = profile.getCallExtraInt("oir")
+        val details = ImsCallProfiles(mapCallTypeFromProfile(profile.mCallType), 3, null)
+        extractProfileExtrasIntoImsCallProfile(profile, details)
+        this.mCi.dial(callee, clir, details, this.mHandler.obtainMessage(1))
+*/
+
+    override fun start(callee: String, profile: ImsCallProfile?) {
+        Log.d(tag, "IMS start - Start calling " + Rlog.pii(tag, callee))
+
+        mState = 1
+        mCallee = callee
+
+        if (profile != null) {
+            mCallProfile.mCallType = profile.mCallType
+            mCallProfile.mMediaProfile = profile.mMediaProfile
+        }
+
         val callInfo = RILImsDial()
+        Log.d(tag, "IMS start - IMS After dialing");
+
         callInfo.address = callee
+
+       // extractProfileExtrasIntoImsCallProfile
         callInfo.clir = profile!!.getCallExtraInt(EXTRA_OIR) // Huawei do this so it **must** be right... Oh wait...
         val extras = profile.mCallExtras.getBundle("OemCallExtras")
         if (extras != null) {
-            Rlog.e(tag, "NI reading oemcallextras, it is $extras")
+            Rlog.i(tag, "NI reading oemcallextras, it is $extras")
         }
         val callType: Int
         try {
@@ -367,7 +435,9 @@ class HwImsCallSession
             throw e
         }
 
+
         callInfo.callDetails.callType = callType
+        callInfo.callDetails.callDomain = 3
         if (HwImsService.instance!!.getConfig(mSlotId)!!.getConfigInt(ImsConfig.ConfigConstants.VLT_SETTING_ENABLED) == ImsConfig.FeatureValueConstants.ON) {
             callInfo.callDetails.callDomain = RILImsCallDomain.CALL_DOMAIN_AUTOMATIC
         } else {
@@ -375,16 +445,16 @@ class HwImsCallSession
         }
 
         try {
-            Rlog.d(tag, "adding to awaiting id from ril")
+            Log.d(tag, "IMS start - Adding to awaiting id from ril")
             awaitingIdFromRIL[mCallee] = this // Do it sooner rather than later so that this call is not seen as a phantom
             RilHolder.getImsRadio(mSlotId)!!.imsDial(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error == 0) {
-                    Rlog.d(tag, "successfully placed call")
+                    Log.d(tag, "successfully placed call")
                     mInCall = true
                     mState = State.ESTABLISHED
                     listener?.callSessionInitiated(profile)
                 } else {
-                    Rlog.e(tag, "call failed")
+                    Log.e(tag, "call failed")
                     mState = State.TERMINATED
                     awaitingIdFromRIL.remove(callee, this)
                     listener?.callSessionInitiatedFailed(ImsReasonInfo())
@@ -396,15 +466,20 @@ class HwImsCallSession
             Rlog.e(tag, "Sending imsDial failed with exception", e)
         }
 
+        Log.d(tag, "IMS start - Ending")
     }
 
     override fun startConference(members: Array<String>?, profile: ImsCallProfile?) {
+        Rlog.d(tag, "startConference...")
+
         // This method is to initiate the conference call, not to add all the members.
         start(members!![0], profile)
         //TODO is this right?
     }
 
     override fun accept(callType: Int, profile: ImsStreamMediaProfile?) {
+        Rlog.d(tag, "accept...")
+
         mState = State.ESTABLISHING
         try {
             RilHolder.getImsRadio(mSlotId)!!.acceptImsCall(RilHolder.callback({ radioResponseInfo, _ ->
@@ -412,7 +487,7 @@ class HwImsCallSession
                     listener?.callSessionInitiatedFailed(ImsReasonInfo())
                     Rlog.e(tag, "error accepting ims call")
                 } else {
-                    listener?.callSessionInitiated(mProfile)
+                    listener?.callSessionInitiated(mCallProfile)
                     mInCall = true
                 }
             }, mSlotId), convertAospCallType(callType))
@@ -425,9 +500,11 @@ class HwImsCallSession
 
     override fun deflect(destination: String?) {
         // Huawei shim this, we can do the same.
+        Rlog.d(tag, "deflect...")
     }
 
     override fun reject(reason: Int) {
+        Rlog.d(tag, "reject...")
         /*
         try {
             getRilCallId();
@@ -480,6 +557,7 @@ class HwImsCallSession
     }
 
     override fun terminate(reason: Int) {
+        Rlog.d(tag, "terminate...")
         mState = State.TERMINATING
         try {
             getRilCallId()
@@ -507,7 +585,7 @@ class HwImsCallSession
         try {
             RilHolder.getImsRadio(mSlotId)!!.switchWaitingOrHoldingAndActive(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error == 0) {
-                    listener?.callSessionHeld(mProfile)
+                    listener?.callSessionHeld(mCallProfile)
                 } else {
                     listener?.callSessionHoldFailed(ImsReasonInfo())
                 }
@@ -522,7 +600,7 @@ class HwImsCallSession
         try {
             RilHolder.getImsRadio(mSlotId)!!.switchWaitingOrHoldingAndActive(RilHolder.callback({ radioResponseInfo, _ ->
                 if (radioResponseInfo.error == 0) {
-                    listener?.callSessionResumed(mProfile)
+                    listener?.callSessionResumed(mCallProfile)
                 } else {
                     Rlog.e(tag, "failed to resume")
                     listener?.callSessionResumeFailed(ImsReasonInfo())
@@ -548,11 +626,11 @@ class HwImsCallSession
             listener?.callSessionMergeFailed(ImsReasonInfo())
             Rlog.e(tag, "failed to request conference", e)
         }
-
     }
 
     fun notifyConfDone(call: DriverImsCall) {
-        listener?.callSessionMergeComplete(HwImsCallSession(mSlotId, mProfile, call))
+        Rlog.i(tag, "notifyConfDone")
+        listener?.callSessionMergeComplete(HwImsCallSession(mSlotId, mCallProfile, call))
     }
 
 

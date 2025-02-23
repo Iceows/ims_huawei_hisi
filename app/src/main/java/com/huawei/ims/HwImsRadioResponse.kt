@@ -118,18 +118,42 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
         //  C:\GitHub\iceows\ims_hi6250_volte\app\src\main\java\com\huawei\ims\ImsRadioResponse.java
         when (msgType) {
 
-            RilConstS32.RIL_REQUEST_HW_IMS_DIAL ->  Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_DIAL")             /* 579 */
-            RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_SEND_USSD")    /* 588 */
-            RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_ANSWER")          /* 590 */
-            RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.i(LOG_TAG, "RIL_REQUEST_HW_GET_IMS_SWITCH")  /* 651 */
-            RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.i(LOG_TAG, "RIL_REQUEST_HW_SET_IMS_SWITCH")  /* 650 */
-            RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.i(LOG_TAG, "RIL_REQUEST_HW_IMS_REGISTER")      /* 686 */
+            RilConstS32.RIL_REQUEST_HW_IMS_DIAL -> { /* 579 */
+                Log.i(LOG_TAG,"RIL_REQUEST_HW_IMS_DIAL")
+            }
+
+            RilConstS32.RIL_REQUEST_HW_IMS_SEND_USSD -> Log.i(
+                LOG_TAG,
+                "RIL_REQUEST_HW_IMS_SEND_USSD"
+            )    /* 588 */
+            RilConstS32.RIL_REQUEST_HW_IMS_ANSWER -> Log.i(
+                LOG_TAG,
+                "RIL_REQUEST_HW_IMS_ANSWER"
+            )          /* 590 */
+            RilConstS32.RIL_REQUEST_HW_GET_IMS_SWITCH -> Log.i(
+                LOG_TAG,
+                "RIL_REQUEST_HW_GET_IMS_SWITCH"
+            )  /* 651 */
+            RilConstS32.RIL_REQUEST_HW_SET_IMS_SWITCH -> Log.i(
+                LOG_TAG,
+                "RIL_REQUEST_HW_SET_IMS_SWITCH"
+            )  /* 650 */
+            RilConstS32.RIL_REQUEST_HW_IMS_REGISTER -> Log.i(
+                LOG_TAG,
+                "RIL_REQUEST_HW_IMS_REGISTER"
+            )      /* 686 */
 
             else -> Log.w(LOG_TAG, "Unknown msg type :$msgType")
         }
 
         // Huawei
-        radioResponseInfo?.let { RilHolder.triggerImsCB(it.serial, radioResponseInfo, rspMsgPayload) }
+        radioResponseInfo?.let {
+            RilHolder.triggerImsCB(
+                it.serial,
+                radioResponseInfo,
+                rspMsgPayload
+            )
+        }
 
     }
 
@@ -162,12 +186,11 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
                     Log.i(LOG_TAG,"InCall VoicePrivacy is enabled")
                 } else {
                     //this.mRil.mVoicePrivacyOffRegistrants.notifyRegistrants()
-                    Log.i(LOG_TAG,"InCall VoicePrivacy is disabled")
+.                    Log.i(LOG_TAG,"InCall VoicePrivacy is disabled")
                 }
 
                 Log.i(LOG_TAG, "calls list contains " + redactCall(driverImsCall))
 
-                /*
                 // RIL sometimes gives us the leading +, so first try with one, and if its null, try again without the +.
                 var session = HwImsCallSession.awaitingIdFromRIL["+" + driverImsCall.number]
                 if (session == null)
@@ -203,7 +226,7 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
                 if (driverImsCall.isMpty  && driverImsCall.state == DriverImsCall.State.DIALING) { // Dialing & Multiparty
                     // It is a new conference call being added.
                     Log.i(LOG_TAG, "Dialing and Multiparty" )
-                }*/
+                }
                 //calls.add(call.index)
                 dcCalls.add(driverImsCall)
             }

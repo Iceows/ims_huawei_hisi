@@ -36,7 +36,7 @@ import android.os.SystemProperties
 class HwImsService : ImsService() {
     private val mmTelFeatures = arrayOfNulls<HwMmTelFeature>(3)
     private val registrations = arrayOfNulls<HwImsRegistration>(3)
-    private val configs = arrayOfNulls<HwImsConfig>(3)
+    private val configs = arrayOfNulls<HwImsConfigImpl>(3)
     private var prefs: SharedPreferences? = null
 
     private var isVolteEnable = 0
@@ -137,7 +137,7 @@ class HwImsService : ImsService() {
             return null
         }
         if (configs[slotId] == null) {
-            configs[slotId] = HwImsConfig()
+            configs[slotId] = HwImsConfigImpl(slotId)
         }
         return configs[slotId]
     }
