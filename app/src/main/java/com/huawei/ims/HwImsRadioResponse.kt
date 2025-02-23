@@ -22,7 +22,6 @@ import android.os.Bundle
 import android.telephony.Rlog
 import android.telephony.ims.ImsCallProfile
 import android.util.Log
-import com.android.ims.ImsManager
 import vendor.huawei.hardware.radio.ims.V1_0.*
 import java.util.*
 
@@ -55,6 +54,48 @@ void uiccAuthResponse(RadioResponseInfo radioResponseInfo, RILUICCAUTHRESPONSE r
 class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadioImsResponse.Stub() {
     private val LOG_TAG = "HwImsRadioResponse"
 
+    /**
+     * Key to retrieve the call ID from an incoming call intent.
+     * @see .open
+     */
+    val EXTRA_CALL_ID = "android:imsCallID"
+
+    /**
+     * Part of the ACTION_IMS_SERVICE_UP or _DOWN intents.
+     * A long value; the phone ID corresponding to the IMS service coming up or down.
+     * Internal use only.
+     * @hide
+     */
+    val EXTRA_PHONE_ID = "android:phone_id"
+
+    /**
+     * Part of the ACTION_IMS_INCOMING_CALL intents.
+     * An boolean value; Flag to indicate that the incoming call is a normal call or call for USSD.
+     * The value "true" indicates that the incoming call is for USSD.
+     * Internal use only.
+     * @hide
+     */
+    val EXTRA_USSD = "android:ussd"
+
+    /**
+     * Part of the ACTION_IMS_INCOMING_CALL intents.
+     * An integer value; service identifier obtained from [ImsManager.open].
+     * Internal use only.
+     * @hide
+     */
+    val EXTRA_SERVICE_ID = "android:imsServiceId"
+
+    /**
+     * Part of the ACTION_IMS_INCOMING_CALL intents.
+     * A boolean value; Flag to indicate whether the call is an unknown
+     * dialing call. Such calls are originated by sending commands (like
+     * AT commands) directly to modem without Android involvement.
+     * Even though they are not incoming calls, they are propagated
+     * to Phone app using same ACTION_IMS_INCOMING_CALL intent.
+     * Internal use only.
+     * @hide
+     */
+    val EXTRA_IS_UNKNOWN_CALL = "android:isUnknown"
     override fun RspMsg(
         radioResponseInfo: RadioResponseInfo?,
         msgType: Int,
@@ -126,9 +167,9 @@ class HwImsRadioResponse internal constructor(private val mSlotId: Int) : IRadio
                     }
                     val extras = Bundle()
                     val callSession = HwImsCallSession(mSlotId, ImsCallProfile(), dc)
-                    extras.putInt(ImsManager.EXTRA_PHONE_ID, mSlotId)
-                    extras.putString(ImsManager.EXTRA_CALL_ID, callSession.callId)
-                    extras.putBoolean(ImsManager.EXTRA_IS_UNKNOWN_CALL, dc.isMT) // A new outgoing call should never happen. Someone is playing with AT commands or talking to the modem.
+                    extras.putInt(EXTRA_PHONE_ID, mSlotId)
+                    extras.putString(EXTRA_CALL_ID, callSession.callId)
+                    extras.putBoolean(EXTRA_IS_UNKNOWN_CALL, dc.isMT) // A new outgoing call should never happen. Someone is playing with AT commands or talking to the modem.
                     Log.i(LOG_TAG, "createMmTelFeature" )
                     HwImsService.instance!!.createMmTelFeature(mSlotId)!!.notifyIncomingCall(callSession, extras)
                 } else {
